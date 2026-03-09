@@ -1,0 +1,118 @@
+# created by virtualenv automatically
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# --- Виртуальные окружения ---
+venv/
+ENV/
+env/
+.venv
+.env
+
+# --- PyCharm / IntelliJ IDEA ---
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.pydevproject
+.settings/
+
+# --- Jupyter Notebook ---
+.ipynb_checkpoints
+
+# --- FastAPI / Starlette ---
+*.log
+logs/
+
+# --- База данных ---
+*.db
+*.sqlite
+*.sqlite3
+.db.sqlite
+
+# --- Переменные окружения ---
+.env
+.env.local
+.env.*.local
+
+# --- Секреты и ключи ---
+*.pem
+*.key
+secrets/
+config_secrets.py
+
+# --- OS ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# --- Coverage ---
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# --- Миграции Alembic (если используете) ---
+alembic/versions/*.pyc
+alembic/__pycache__/
+
+# --- Статические файлы (если собираете) ---
+staticfiles/
+
+# --- Временные файлы ---
+*.tmp
+*.bak
+*.swp
+*~.nib
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# --- IDE другие ---
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.tmproj
+*.tmlanguage
+*.yaml-tmlanguage
+
+# --- Тесты ---
+.pytest_cache/
+.tox/
+.nox/
+
