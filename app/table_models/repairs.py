@@ -12,3 +12,6 @@ class Repair(Base):
     repair_date: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=func.now)
     description: Mapped[str] = mapped_column(String(50), nullable=False)
     cost: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+
+    tool: Mapped["Tool"] = relationship("Tool",
+                                        back_populates="repairs")

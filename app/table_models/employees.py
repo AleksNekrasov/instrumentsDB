@@ -11,5 +11,7 @@ class Employee(Base):
     name: Mapped[str] = mapped_column(String(30), nullable=False)
     position: Mapped[str] = mapped_column(String(30), nullable=False)
 
+    tools: Mapped[list["Tool"]] = relationship("Tool",
+                                               back_populates="employee")
 
 

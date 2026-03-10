@@ -12,3 +12,6 @@ class ToolModel(Base):
     brand: Mapped[str] = mapped_column(String(20), nullable=False)
     model: Mapped[str] = mapped_column(String(20), nullable=False)
 
+    tools: Mapped[list["Tool"]] =  relationship("Tool",
+                                          back_populates="tool_model",
+                                          )

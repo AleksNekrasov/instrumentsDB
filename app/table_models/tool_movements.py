@@ -12,3 +12,8 @@ class ToolMovement(Base):
     to_locations: Mapped[int] = mapped_column(Integer, ForeignKey("locations.id"), nullable=False)
     movement_date: Mapped[date] = mapped_column(Date, nullable=False, default=func.now)
     employee_id: Mapped[int] = mapped_column(Integer, ForeignKey("employees.id"), nullable=False)
+
+    tool: Mapped["Tool"] = relationship("Tool",
+                                        back_populates="tool_movements")
+    location: Mapped["Location"] = relationship("Location",
+                                                back_populates="tool_movements")
