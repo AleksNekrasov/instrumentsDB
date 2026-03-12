@@ -17,3 +17,5 @@ class Employee(Base):
     tool_movements: Mapped[list["ToolMovement"]] = relationship("ToolMovement",
                                                                 back_populates="employee")
 
+    tool_issues: Mapped[list["ToolIssue"]] = relationship("ToolIssue",back_populates="employee")
+

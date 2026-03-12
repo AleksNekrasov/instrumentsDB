@@ -33,3 +33,5 @@ class Tool(Base):
     tool_movements: Mapped[list["ToolMovement"]] = relationship("ToolMovement",
                                                                 back_populates="tool")
 
+    tool_issues: Mapped[list["ToolIssue"]] = relationship("ToolIssue",back_populates="tool")
+
