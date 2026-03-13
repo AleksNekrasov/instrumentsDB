@@ -10,7 +10,7 @@ class Employee(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(30), nullable=False)
-    position: Mapped[str] = mapped_column(String(30), nullable=False)
+    position: Mapped[str] = mapped_column(String(30), nullable=False) #должность
 
     tools: Mapped[list["Tool"]] = relationship("Tool",
                                                back_populates="employee")
