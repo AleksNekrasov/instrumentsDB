@@ -15,7 +15,7 @@ class ToolIssue(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     tool_id: Mapped[int] = mapped_column(Integer, ForeignKey("tools.id"), nullable=False)
-    employee_id: Mapped[int] = mapped_column(Integer, ForeignKey("employees.id"))
+    employee_id: Mapped[int] = mapped_column(Integer, ForeignKey("employees.id"), nullable=False)
     issue_date: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     return_date: Mapped[datetime | None] = mapped_column(DateTime, default=None)
 
