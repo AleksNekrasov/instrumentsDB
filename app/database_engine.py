@@ -9,10 +9,12 @@ SessionLocal = sessionmaker(bind=engine)
 #---------Асинхронное подключение к PostgreSQL----------------------
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase
-from decouple import config
+from app.config import get_settings
 
-# Строка подключения для PostgreSQl
-DATABASE_URL = config("DATABASE_URL")
+settings = get_settings()
+
+# Строка подключения для PostgresSQL
+DATABASE_URL = settings.database_url
 
 # Создаем Асинхронный движок
 async_engine = create_async_engine(url=DATABASE_URL, echo=True)
