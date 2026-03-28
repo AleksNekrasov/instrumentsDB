@@ -1,4 +1,4 @@
-from sqlalchemy import String, Integer, ForeignKey, func, Date
+from sqlalchemy import String, Integer, ForeignKey, func, Date, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import date
 
@@ -21,6 +21,7 @@ class Tool(Base):
                                                )
     location_id: Mapped[int] = mapped_column(Integer, ForeignKey("locations.id"), nullable=False)
     employee_id: Mapped[int |None] = mapped_column(Integer, ForeignKey("employees.id"), default=None)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     tool_model: Mapped["ToolModel"] = relationship("ToolModel",
                                                    back_populates="tools")

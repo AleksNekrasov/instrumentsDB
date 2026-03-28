@@ -1,4 +1,4 @@
-from sqlalchemy import String, Integer
+from sqlalchemy import String, Integer, Boolean
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from app.database_engine import Base
@@ -10,6 +10,7 @@ class Location(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(20), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     # инструменты находящиеся в этой локации
     tools: Mapped[list["Tool"]] = relationship("Tool",
                                                back_populates="location")
