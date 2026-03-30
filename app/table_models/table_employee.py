@@ -13,8 +13,8 @@ class Employee(Base):
     position: Mapped[str] = mapped_column(String(30), nullable=False) #должность
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
-    tools: Mapped[list["Tool"]] = relationship("Tool",
-                                               back_populates="employee")
+    # tools: Mapped[list["Tool"]] = relationship("Tool",
+    #                                            back_populates="employee")
     tool_movements: Mapped[list["ToolMovement"]] = relationship("ToolMovement",
                                                                 back_populates="employee")
 
