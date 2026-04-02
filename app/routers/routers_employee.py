@@ -8,8 +8,9 @@ from app.schemas_pydantic.employee_pydantic import EmployeeCreate, EmployeeRespo
 
 router = APIRouter(prefix='/employees', tags=["Employees"])
 
-@router.post("/", response_model=EmployeeResponse)
+@router.post("/",status_code=201, response_model=EmployeeResponse)
 async def create_employee(employee_in: EmployeeCreate, db: AsyncSession = Depends(get_db)):
+    """Создание нового сотрудника"""
     # 🔍 ищем сотрудника
     stmt = select(Employee).where(
         Employee.name == employee_in.name,
@@ -39,5 +40,52 @@ async def create_employee(employee_in: EmployeeCreate, db: AsyncSession = Depend
 
     return employee
 
+@router.get("/", status_code=200, response_model=list[EmployeeResponse])
+async def get_all_employees(db: AsyncSession = Depends(get_db)):
+    """Получение всех активных сотрудников"""
+    stmt = select(Employee).where(Employee.is_active.is_(True))
+    result = (await db.scalars(stmt)).all()
+
+    return result
+
+from fastapi import HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
+
+# @router.get("/{employee_id}", response_model=EmployeeWithToolsResponse)
+# async def get_employee_by_id(
+#     employee_id: int,
+#     db: AsyncSession = Depends(get_db)
+# ):
+#     # 🔍 получаем сотрудника
+#     stmt = (
+#         select(Employee)
+#         .where(
+#             Employee.id == employee_id,
+#             Employee.is_active.is_(True)
+#         )
+#         .options(selectinload(Employee.tool_issues).selectinload(ToolIssue.tool))
+#     )
+#
+#     result = await db.execute(stmt)
+#     employee = result.scalar_one_or_none()
+#
+#     if not employee:
+#         raise HTTPException(
+#             status_code=status.HTTP_404_NOT_FOUND,
+#             detail="Сотрудник не найден"
+#         )
+#
+#     # 🎯 берём только актуальные инструменты
+#     current_tools = [
+#         issue.tool
+#         for issue in employee.tool_issues
+#         if issue.return_date is None
+#     ]
+#
+#     # 👇 добавляем динамическое поле
+#     employee.tools = current_tools
+#
+#     return employee
 
 
