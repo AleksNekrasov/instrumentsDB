@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Annotated
 
+from  app.schemas_pydantic.tool_model_pydantic import ToolModelResponse
 
 class EmployeeBase(BaseModel):
     name: Annotated[str, Field(..., min_length=3, max_length=30,
@@ -25,4 +26,6 @@ class EmployeeResponse(EmployeeBase):
     """Ответ API"""
 
     id: int
+    tools: list[ToolModelResponse] = []
+
     model_config = ConfigDict(from_attributes=True)

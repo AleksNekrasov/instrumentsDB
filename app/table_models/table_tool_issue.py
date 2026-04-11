@@ -16,8 +16,10 @@ class ToolIssue(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     tool_id: Mapped[int] = mapped_column(Integer, ForeignKey("tools.id"), nullable=False)
     employee_id: Mapped[int] = mapped_column(Integer, ForeignKey("employees.id"), nullable=False)
+    #дата выдачи
     issue_date: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    # дата возврата
     return_date: Mapped[datetime | None] = mapped_column(DateTime, default=None)
 
-    tool: Mapped["Tool"] = relationship(back_populates="tool_issues")
-    employee: Mapped["Employee"] = relationship(back_populates="tool_issues")
+    tool: Mapped["Tool"] = relationship("Tool", back_populates="tool_issues")
+    employee: Mapped["Employee"] = relationship("Employee", back_populates="tool_issues")

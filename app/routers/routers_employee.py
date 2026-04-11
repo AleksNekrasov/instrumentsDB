@@ -1,10 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, and_
+
+from sqlalchemy.orm import selectinload, with_loader_criteria
 
 from app.database_depends import get_db
+from app.table_models.table_tool_issue import ToolIssue
 from app.table_models.table_employee import Employee
+from app.table_models.table_tool import Tool
+from app.table_models.table_tool_model import ToolModel
 from app.schemas_pydantic.employee_pydantic import EmployeeCreate, EmployeeResponse
+
+from app.enum_file import StatusEnum
 
 router = APIRouter(prefix='/employees', tags=["Employees"])
 
@@ -42,15 +49,33 @@ async def create_employee(employee_in: EmployeeCreate, db: AsyncSession = Depend
 
 @router.get("/", status_code=200, response_model=list[EmployeeResponse])
 async def get_all_employees(db: AsyncSession = Depends(get_db)):
-    """Получение всех активных сотрудников"""
-    stmt = select(Employee).where(Employee.is_active.is_(True))
+    """Получение списка всех активных сотрудников и их инструмента"""
+    stmt = (
+        select(Employee)
+        .where(Employee.is_active.is_(True))
+        .options(
+            selectinload(Employee.tool_issues)
+            .selectinload(ToolIssue.tool)
+            .selectinload(Tool.tool_model)
+            , with_loader_criteria("ToolIssue",
+                                   ToolIssue.return_date.is_(None),
+                                   include_aliases=True)
+            , with_loader_criteria("Tool",
+                                   and_(
+                                       Tool.status == StatusEnum.ACTIVE,
+                                       Tool.is_active.is_(True)
+                                   ),
+                                   include_aliases=True)
+            , with_loader_criteria("ToolModel",
+                                   ToolModel.is_active.is_(True),
+                                   include_aliases=True)
+        )
+    )
     result = (await db.scalars(stmt)).all()
 
     return result
 
-from fastapi import HTTPException, status
-from sqlalchemy import select
-from sqlalchemy.orm import selectinload
+
 
 # @router.get("/{employee_id}", response_model=EmployeeWithToolsResponse)
 # async def get_employee_by_id(
