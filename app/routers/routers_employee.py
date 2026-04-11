@@ -73,7 +73,37 @@ async def get_all_employees(db: AsyncSession = Depends(get_db)):
     )
     result = (await db.scalars(stmt)).all()
 
-    return result
+    employees = []
+
+    for emp in result:
+        tools = []
+
+        for issue in emp.tool_issues:   #  tool_issue
+            tool = issue.tool           # tool
+
+            if not tool:                # если tool пустой
+                continue                # запускаем следующий цикл
+
+            if not tool.tool_model:     # если tool_model пустой
+                continue                # запускаем следующий цикл
+
+            tools.append(tool.tool_model)   # добавляем в список объект tool_model
+
+        # создаем поле tools, которого у нас не было и записываем в него список tools
+        # это нужно для корректного ответа response_model
+        # изначально в объекте Employees у нас нет поля tools: list[ToolModelResponse]
+        emp.tools = tools
+
+        employees.append(emp)           # добавляем модель в подготавливаемый ответ
+
+    return employees
+
+
+
+
+
+
+
 
 
 
