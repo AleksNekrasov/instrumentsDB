@@ -16,6 +16,9 @@ class EmployeeCreate(EmployeeBase):
 
 
 class EmployeeUpdate(BaseModel):
+    # нужно ли давать менять имя при обновлении сотрудника?
+    # но пусть пока будет
+    """Обновление данных о сотруднике"""
     name: Annotated[str | None, Field(min_length=3, max_length=30,
                                       description="ФИО сотрудника(3-30 символов)")] = None
     position: Annotated[str | None, Field(min_length=3, max_length=30,

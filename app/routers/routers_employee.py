@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_
+from sqlalchemy import select, update, and_
 
 from sqlalchemy.orm import selectinload, with_loader_criteria
 
@@ -9,9 +9,10 @@ from app.table_models.table_tool_issue import ToolIssue
 from app.table_models.table_employee import Employee
 from app.table_models.table_tool import Tool
 from app.table_models.table_tool_model import ToolModel
-from app.schemas_pydantic.employee_pydantic import EmployeeCreate, EmployeeResponse
+from app.schemas_pydantic.employee_pydantic import EmployeeCreate, EmployeeResponse, EmployeeUpdate
 
 from app.enum_file import StatusEnum
+from app.helpers import build_employee_tools
 
 router = APIRouter(prefix='/employees', tags=["Employees"])
 
@@ -72,33 +73,68 @@ async def get_all_employees(db: AsyncSession = Depends(get_db)):
         )
     )
     result = (await db.scalars(stmt)).all()
-
-    employees = []
-
-    for emp in result:
-        tools = []
-
-        for issue in emp.tool_issues:   #  tool_issue
-            tool = issue.tool           # tool
-
-            if not tool:                # если tool пустой
-                continue                # запускаем следующий цикл
-
-            if not tool.tool_model:     # если tool_model пустой
-                continue                # запускаем следующий цикл
-
-            tools.append(tool.tool_model)   # добавляем в список объект tool_model
-
-        # создаем поле tools, которого у нас не было и записываем в него список tools
-        # это нужно для корректного ответа response_model
-        # изначально в объекте Employees у нас нет поля tools: list[ToolModelResponse]
-        emp.tools = tools
-
-        employees.append(emp)           # добавляем модель в подготавливаемый ответ
+    # создаем список сотрудников с инструментами.
+    # в функцию отправляем сотрудника, функция возвращает сотрудника уже со списком инструментов
+    # все записываем в новый список list[EmployeeResponse]
+    employees = [build_employee_tools(emp) for emp in result]
 
     return employees
 
+@router.get("/{employee_id}", response_model=EmployeeResponse)
+async def get_employee_by_id(
+        employee_id: int,
+        db: AsyncSession = Depends(get_db)
+):
+    stmt = (
+        select(Employee)
+        .where(and_(Employee.id == employee_id,
+                    Employee.is_active.is_(True)))
+        .options(
+            selectinload(Employee.tool_issues)
+            .selectinload(ToolIssue.tool)
+            .selectinload(Tool.tool_model)
+            ,with_loader_criteria("ToolIssue",
+                                  ToolIssue.return_date.is_(None),
+                                  include_aliases=True)
+            ,with_loader_criteria("Tool",
+                                  and_(Tool.status == StatusEnum.ACTIVE,
+                                       Tool.is_active.is_(True)),
+                                  include_aliases=True)
+            ,with_loader_criteria("ToolModel",
+                                  ToolModel.is_active.is_(True),
+                                  include_aliases=True)
+        )
+    )
+    result = (await db.scalars(stmt)).one_or_none()
 
+    # отправляем в функцию сотрудника, функция возвращает его с инструментом
+    employee = build_employee_tools(result)
+
+    return employee
+
+@router.put("/{employee_id}", response_model=EmployeeResponse)
+async def put_employee_by_id(employee_id: int,
+                             new_data: EmployeeUpdate,
+                             db: AsyncSession=Depends(get_db)):
+    emp_stmt = (
+        select(Employee)
+        .where(Employee.id == employee_id)
+        .where(Employee.is_active.is_(True))
+    )
+    employee = (await db.scalars(emp_stmt)).one_or_none()
+
+    if employee is None:
+        raise HTTPException(status_code=404, detail="Employee not found (сотрудник не найден)")
+
+    await db.execute(
+        update(Employee)
+        .where(Employee.id == employee_id)
+        .values(**new_data.model_dump(exclude_unset=True))
+    )
+    await db.commit()
+    tools = []
+    employee.tools = tools
+    return employee
 
 
 
