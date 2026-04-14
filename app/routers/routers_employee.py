@@ -12,7 +12,7 @@ from app.table_models.table_tool_model import ToolModel
 from app.schemas_pydantic.employee_pydantic import EmployeeCreate, EmployeeResponse, EmployeeUpdate
 
 from app.enum_file import StatusEnum
-from app.helpers import build_employee_tools
+from app.helpers import build_employee_tools, select_true_employee
 
 router = APIRouter(prefix='/employees', tags=["Employees"])
 
@@ -51,28 +51,9 @@ async def create_employee(employee_in: EmployeeCreate, db: AsyncSession = Depend
 @router.get("/", status_code=200, response_model=list[EmployeeResponse])
 async def get_all_employees(db: AsyncSession = Depends(get_db)):
     """Получение списка всех активных сотрудников и их инструмента"""
-    stmt = (
-        select(Employee)
-        .where(Employee.is_active.is_(True))
-        .options(
-            selectinload(Employee.tool_issues)
-            .selectinload(ToolIssue.tool)
-            .selectinload(Tool.tool_model)
-            , with_loader_criteria("ToolIssue",
-                                   ToolIssue.return_date.is_(None),
-                                   include_aliases=True)
-            , with_loader_criteria("Tool",
-                                   and_(
-                                       Tool.status == StatusEnum.ACTIVE,
-                                       Tool.is_active.is_(True)
-                                   ),
-                                   include_aliases=True)
-            , with_loader_criteria("ToolModel",
-                                   ToolModel.is_active.is_(True),
-                                   include_aliases=True)
-        )
-    )
+    stmt = select_true_employee()
     result = (await db.scalars(stmt)).all()
+
     # создаем список сотрудников с инструментами.
     # в функцию отправляем сотрудника, функция возвращает сотрудника уже со списком инструментов
     # все записываем в новый список list[EmployeeResponse]
@@ -85,26 +66,7 @@ async def get_employee_by_id(
         employee_id: int,
         db: AsyncSession = Depends(get_db)
 ):
-    stmt = (
-        select(Employee)
-        .where(and_(Employee.id == employee_id,
-                    Employee.is_active.is_(True)))
-        .options(
-            selectinload(Employee.tool_issues)
-            .selectinload(ToolIssue.tool)
-            .selectinload(Tool.tool_model)
-            ,with_loader_criteria("ToolIssue",
-                                  ToolIssue.return_date.is_(None),
-                                  include_aliases=True)
-            ,with_loader_criteria("Tool",
-                                  and_(Tool.status == StatusEnum.ACTIVE,
-                                       Tool.is_active.is_(True)),
-                                  include_aliases=True)
-            ,with_loader_criteria("ToolModel",
-                                  ToolModel.is_active.is_(True),
-                                  include_aliases=True)
-        )
-    )
+    stmt = select_true_employee().where(Employee.id == employee_id)
     result = (await db.scalars(stmt)).one_or_none()
 
     # отправляем в функцию сотрудника, функция возвращает его с инструментом
