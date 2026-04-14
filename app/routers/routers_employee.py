@@ -69,6 +69,9 @@ async def get_employee_by_id(
     stmt = select_true_employee().where(Employee.id == employee_id)
     result = (await db.scalars(stmt)).one_or_none()
 
+    if result is None:
+        raise HTTPException(status_code=404, detail="Employee is not found(Сотрудник не найден)")
+
     # отправляем в функцию сотрудника, функция возвращает его с инструментом
     employee = build_employee_tools(result)
 
@@ -78,11 +81,8 @@ async def get_employee_by_id(
 async def put_employee_by_id(employee_id: int,
                              new_data: EmployeeUpdate,
                              db: AsyncSession=Depends(get_db)):
-    emp_stmt = (
-        select(Employee)
-        .where(Employee.id == employee_id)
-        .where(Employee.is_active.is_(True))
-    )
+    """ сырая функция обновления сотрудника(Нужно доработать)"""
+    emp_stmt = select_true_employee()
     employee = (await db.scalars(emp_stmt)).one_or_none()
 
     if employee is None:
@@ -94,8 +94,7 @@ async def put_employee_by_id(employee_id: int,
         .values(**new_data.model_dump(exclude_unset=True))
     )
     await db.commit()
-    tools = []
-    employee.tools = tools
+    employee = build_employee_tools(employee) # тут пока так, для корректного возврата EmployeeResponse
     return employee
 
 
