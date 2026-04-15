@@ -9,14 +9,14 @@ from app.table_models.table_tool_issue import ToolIssue
 from app.table_models.table_employee import Employee
 from app.table_models.table_tool import Tool
 from app.table_models.table_tool_model import ToolModel
-from app.schemas_pydantic.employee_pydantic import EmployeeCreate, EmployeeResponse, EmployeeUpdate
+from app.schemas_pydantic.employee_pydantic import EmployeeCreate, EmployeeResponse, EmployeeUpdate, EmployeeDelete
 
 from app.enum_file import StatusEnum
-from app.helpers import build_employee_tools, select_true_employee
-
+from app.helpers import build_employee_tools, select_true_employee, soft_delete
 router = APIRouter(prefix='/employees', tags=["Employees"])
 
-@router.post("/",status_code=201, response_model=EmployeeResponse)
+
+@router.post("/", status_code=201, response_model=EmployeeResponse)
 async def create_employee(employee_in: EmployeeCreate, db: AsyncSession = Depends(get_db)):
     """Создание нового сотрудника"""
     # 🔍 ищем сотрудника
@@ -48,18 +48,20 @@ async def create_employee(employee_in: EmployeeCreate, db: AsyncSession = Depend
 
     return employee
 
+
 @router.get("/", status_code=200, response_model=list[EmployeeResponse])
 async def get_all_employees(db: AsyncSession = Depends(get_db)):
     """Получение списка всех активных сотрудников и их инструмента"""
     stmt = select_true_employee()
     result = (await db.scalars(stmt)).all()
 
-    # создаем список сотрудников с инструментами.
-    # в функцию отправляем сотрудника, функция возвращает сотрудника уже со списком инструментов
+    # Создаем список сотрудников с инструментами.
+    # В функцию отправляем сотрудника, функция возвращает сотрудника уже со списком инструментов
     # все записываем в новый список list[EmployeeResponse]
     employees = [build_employee_tools(emp) for emp in result]
 
     return employees
+
 
 @router.get("/{employee_id}", response_model=EmployeeResponse)
 async def get_employee_by_id(
@@ -77,10 +79,11 @@ async def get_employee_by_id(
 
     return employee
 
+
 @router.put("/{employee_id}", response_model=EmployeeResponse)
 async def put_employee_by_id(employee_id: int,
                              new_data: EmployeeUpdate,
-                             db: AsyncSession=Depends(get_db)):
+                             db: AsyncSession = Depends(get_db)):
     """ сырая функция обновления сотрудника(Нужно доработать)"""
     emp_stmt = select_true_employee()
     employee = (await db.scalars(emp_stmt)).one_or_none()
@@ -94,50 +97,20 @@ async def put_employee_by_id(employee_id: int,
         .values(**new_data.model_dump(exclude_unset=True))
     )
     await db.commit()
-    employee = build_employee_tools(employee) # тут пока так, для корректного возврата EmployeeResponse
+    employee = build_employee_tools(employee)  # тут пока так, для корректного возврата EmployeeResponse
     return employee
 
+@router.delete("/{employee_id}", response_model=EmployeeDelete, status_code=200)
+async def del_employee_by_id(employee_id: int, db: AsyncSession = Depends(get_db)):
+    stmt = select_true_employee().where(Employee.id == employee_id)
+    employee = (await db.scalars(stmt)).one_or_none()
 
+    if employee is None:
+        raise HTTPException(status_code=404, detail="Employee is not found(Сотрудник не найден)")
 
+    await soft_delete(obj=employee, db=db)
+    await db.refresh(employee)
+    return employee
 
-
-
-
-
-# @router.get("/{employee_id}", response_model=EmployeeWithToolsResponse)
-# async def get_employee_by_id(
-#     employee_id: int,
-#     db: AsyncSession = Depends(get_db)
-# ):
-#     # 🔍 получаем сотрудника
-#     stmt = (
-#         select(Employee)
-#         .where(
-#             Employee.id == employee_id,
-#             Employee.is_active.is_(True)
-#         )
-#         .options(selectinload(Employee.tool_issues).selectinload(ToolIssue.tool))
-#     )
-#
-#     result = await db.execute(stmt)
-#     employee = result.scalar_one_or_none()
-#
-#     if not employee:
-#         raise HTTPException(
-#             status_code=status.HTTP_404_NOT_FOUND,
-#             detail="Сотрудник не найден"
-#         )
-#
-#     # 🎯 берём только актуальные инструменты
-#     current_tools = [
-#         issue.tool
-#         for issue in employee.tool_issues
-#         if issue.return_date is None
-#     ]
-#
-#     # 👇 добавляем динамическое поле
-#     employee.tools = current_tools
-#
-#     return employee
 
 

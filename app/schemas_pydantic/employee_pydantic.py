@@ -32,3 +32,12 @@ class EmployeeResponse(EmployeeBase):
     tools: list[ToolModelResponse] = []
 
     model_config = ConfigDict(from_attributes=True)
+
+class EmployeeDelete(BaseModel):
+    """Ответ API после мягкого удаления сотрудника"""
+    id: int
+    name: str
+    is_active: bool
+
+    model_config = ConfigDict(from_attributes=True)
+

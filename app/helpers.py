@@ -20,11 +20,14 @@ def build_employee_tools(employee: Employee) -> Employee:
     ]
     return employee
 
-def select_true_employee() -> Select[tuple[Any]]:
-    """Возвращаем результат select-запроса работающих сотрудников"""
+def select_true_employee(is_active: bool = True) -> Select[tuple[Any]]:
+    """Возвращаем результат select-запроса работающих сотрудников
+    может принимать переменную is_active по умолчанию == True
+    для сортировки работающих или неработающих(удаленных) сотрудников: is_active == False"""
+
     stmt = (
         select(Employee)
-        .where(Employee.is_active.is_(True))
+        .where(Employee.is_active.is_(is_active))
         .options(
             selectinload(Employee.tool_issues)
             .selectinload(ToolIssue.tool)
@@ -44,3 +47,8 @@ def select_true_employee() -> Select[tuple[Any]]:
         )
     )
     return stmt
+
+async def soft_delete(obj, db):
+    """Мягкое удаление объекта"""
+    obj.is_active = False
+    db.commit()
