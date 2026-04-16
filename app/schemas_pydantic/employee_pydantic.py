@@ -29,7 +29,7 @@ class EmployeeResponse(EmployeeBase):
     """Ответ API"""
 
     id: int
-    tools: list[ToolModelResponse] = []
+    tools: list[ToolModelResponse] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 

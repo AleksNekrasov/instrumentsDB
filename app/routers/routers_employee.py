@@ -85,8 +85,8 @@ async def put_employee_by_id(employee_id: int,
                              new_data: EmployeeUpdate,
                              db: AsyncSession = Depends(get_db)):
     """ сырая функция обновления сотрудника(Нужно доработать)"""
-    emp_stmt = select_true_employee()
-    employee = (await db.scalars(emp_stmt)).one_or_none()
+    emp_stmt = select_true_employee().where(Employee.id == employee_id)
+    employee = (await db.scalars(emp_stmt)).unique().one_or_none()
 
     if employee is None:
         raise HTTPException(status_code=404, detail="Employee not found (сотрудник не найден)")
@@ -103,7 +103,7 @@ async def put_employee_by_id(employee_id: int,
 @router.delete("/{employee_id}", response_model=EmployeeDelete, status_code=200)
 async def del_employee_by_id(employee_id: int, db: AsyncSession = Depends(get_db)):
     stmt = select_true_employee().where(Employee.id == employee_id)
-    employee = (await db.scalars(stmt)).one_or_none()
+    employee = (await db.scalars(stmt)).unique().one_or_none()
 
     if employee is None:
         raise HTTPException(status_code=404, detail="Employee is not found(Сотрудник не найден)")

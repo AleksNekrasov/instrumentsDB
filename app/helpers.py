@@ -32,16 +32,16 @@ def select_true_employee(is_active: bool = True) -> Select[tuple[Any]]:
             selectinload(Employee.tool_issues)
             .selectinload(ToolIssue.tool)
             .selectinload(Tool.tool_model)
-            , with_loader_criteria("ToolIssue",
+            , with_loader_criteria(ToolIssue,
                                    ToolIssue.return_date.is_(None),
                                    include_aliases=True)
-            , with_loader_criteria("Tool",
+            , with_loader_criteria(Tool,
                                    and_(
                                        Tool.status == StatusEnum.ACTIVE,
                                        Tool.is_active.is_(True)
                                    ),
                                    include_aliases=True)
-            , with_loader_criteria("ToolModel",
+            , with_loader_criteria(ToolModel,
                                    ToolModel.is_active.is_(True),
                                    include_aliases=True)
         )
@@ -51,4 +51,4 @@ def select_true_employee(is_active: bool = True) -> Select[tuple[Any]]:
 async def soft_delete(obj, db):
     """Мягкое удаление объекта"""
     obj.is_active = False
-    db.commit()
+    await db.commit()
