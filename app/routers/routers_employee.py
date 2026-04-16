@@ -1,18 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, and_
-
-from sqlalchemy.orm import selectinload, with_loader_criteria
+from sqlalchemy import select, update
 
 from app.database_depends import get_db
-from app.table_models.table_tool_issue import ToolIssue
 from app.table_models.table_employee import Employee
-from app.table_models.table_tool import Tool
-from app.table_models.table_tool_model import ToolModel
 from app.schemas_pydantic.employee_pydantic import EmployeeCreate, EmployeeResponse, EmployeeUpdate, EmployeeDelete
 
-from app.enum_file import StatusEnum
-from app.helpers import build_employee_tools, select_true_employee, soft_delete
+from app.helpers import populate_employee_tools, select_true_employee, soft_delete
+
 router = APIRouter(prefix='/employees', tags=["Employees"])
 
 
@@ -58,7 +53,7 @@ async def get_all_employees(db: AsyncSession = Depends(get_db)):
     # Создаем список сотрудников с инструментами.
     # В функцию отправляем сотрудника, функция возвращает сотрудника уже со списком инструментов
     # все записываем в новый список list[EmployeeResponse]
-    employees = [build_employee_tools(emp) for emp in result]
+    employees = [populate_employee_tools(emp) for emp in result]
 
     return employees
 
@@ -75,7 +70,7 @@ async def get_employee_by_id(
         raise HTTPException(status_code=404, detail="Employee is not found(Сотрудник не найден)")
 
     # отправляем в функцию сотрудника, функция возвращает его с инструментом
-    employee = build_employee_tools(result)
+    employee = populate_employee_tools(result)
 
     return employee
 
@@ -97,8 +92,9 @@ async def put_employee_by_id(employee_id: int,
         .values(**new_data.model_dump(exclude_unset=True))
     )
     await db.commit()
-    employee = build_employee_tools(employee)  # тут пока так, для корректного возврата EmployeeResponse
+    employee = populate_employee_tools(employee)  # тут пока так, для корректного возврата EmployeeResponse
     return employee
+
 
 @router.delete("/{employee_id}", response_model=EmployeeDelete, status_code=200)
 async def del_employee_by_id(employee_id: int, db: AsyncSession = Depends(get_db)):
@@ -111,6 +107,3 @@ async def del_employee_by_id(employee_id: int, db: AsyncSession = Depends(get_db
     await soft_delete(obj=employee, db=db)
     await db.refresh(employee)
     return employee
-
-
-

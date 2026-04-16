@@ -1,7 +1,8 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Annotated
 
-from  app.schemas_pydantic.tool_model_pydantic import ToolModelResponse
+from app.schemas_pydantic.tool_model_pydantic import ToolModelResponse
+
 
 class EmployeeBase(BaseModel):
     name: Annotated[str, Field(..., min_length=3, max_length=30,
@@ -33,6 +34,7 @@ class EmployeeResponse(EmployeeBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class EmployeeDelete(BaseModel):
     """Ответ API после мягкого удаления сотрудника"""
     id: int
@@ -40,4 +42,3 @@ class EmployeeDelete(BaseModel):
     is_active: bool
 
     model_config = ConfigDict(from_attributes=True)
-

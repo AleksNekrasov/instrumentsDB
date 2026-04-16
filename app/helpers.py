@@ -11,14 +11,15 @@ from app.table_models.table_tool_issue import ToolIssue
 from app.enum_file import StatusEnum
 
 
-def build_employee_tools(employee: Employee) -> Employee:
-    """Возвращает сотрудника уже со списком инструментов"""
+def populate_employee_tools(employee: Employee) -> Employee:
+    """Заполняет атрибут tools сотрудника списком моделей инструментов из активных выдач"""
     employee.tools = [
         issue.tool.tool_model
         for issue in employee.tool_issues
         if issue.tool and issue.tool.tool_model
     ]
     return employee
+
 
 def select_true_employee(is_active: bool = True) -> Select[tuple[Any]]:
     """Возвращаем результат select-запроса работающих сотрудников
@@ -47,6 +48,7 @@ def select_true_employee(is_active: bool = True) -> Select[tuple[Any]]:
         )
     )
     return stmt
+
 
 async def soft_delete(obj, db):
     """Мягкое удаление объекта"""

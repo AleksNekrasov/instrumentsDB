@@ -8,6 +8,7 @@ app = FastAPI(title="FastAPI база учета инструмента",
 
 app.include_router(employee_router)
 
+
 @app.get("/")
 async def root():
     """
