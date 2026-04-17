@@ -50,9 +50,9 @@ async def get_all_employees(db: AsyncSession = Depends(get_db)):
     stmt = select_true_employee()
     result = (await db.scalars(stmt)).all()
 
-    # Создаем список сотрудников с инструментами.
-    # В функцию отправляем сотрудника, функция возвращает сотрудника уже со списком инструментов
-    # все записываем в новый список list[EmployeeResponse]
+    # Создаём список сотрудников с инструментами.
+    # В функцию отправляем сотрудника, функция возвращает сотрудника уже со списком инструментов,
+    # всё записываем в новый список list[EmployeeResponse]
     employees = [populate_employee_tools(emp) for emp in result]
 
     return employees
@@ -79,7 +79,7 @@ async def get_employee_by_id(
 async def put_employee_by_id(employee_id: int,
                              new_data: EmployeeUpdate,
                              db: AsyncSession = Depends(get_db)):
-    """ сырая функция обновления сотрудника(Нужно доработать)"""
+    """ сырая функция обновления сотрудника (Нужно доработать)"""
     emp_stmt = select_true_employee().where(Employee.id == employee_id)
     employee = (await db.scalars(emp_stmt)).unique().one_or_none()
 

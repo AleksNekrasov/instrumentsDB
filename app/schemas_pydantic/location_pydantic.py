@@ -16,5 +16,14 @@ class LocationResponse(LocationBase):
     """Ответ API"""
 
     id: int
+    is_active: bool
+
+    model_config = ConfigDict(from_attributes=True)
+
+class LocationDelete(BaseModel):
+    """Ответ API"""
+    id: int
+    name: str
+    is_active: bool
 
     model_config = ConfigDict(from_attributes=True)

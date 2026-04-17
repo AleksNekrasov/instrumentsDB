@@ -54,3 +54,8 @@ async def soft_delete(obj, db):
     """Мягкое удаление объекта"""
     obj.is_active = False
     await db.commit()
+
+
+def correct_name(name: str) -> str:
+    """Возвращает строку в которой первая буква заглавная остальные строчные"""
+    return name.capitalize()
