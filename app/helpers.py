@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Type
 
 from sqlalchemy import Select, select, update, and_
 from sqlalchemy.orm import selectinload, with_loader_criteria
@@ -7,6 +7,8 @@ from app.table_models.table_employee import Employee
 from app.table_models.table_tool import Tool
 from app.table_models.table_tool_model import ToolModel
 from app.table_models.table_tool_issue import ToolIssue
+from app.table_models.table_location import Location
+
 
 from app.enum_file import StatusEnum
 
@@ -59,3 +61,9 @@ async def soft_delete(obj, db):
 def correct_name(name: str) -> str:
     """Возвращает строку в которой первая буква заглавная остальные строчные"""
     return name.capitalize()
+
+def select_locations(is_active: bool = True) -> Select:
+    """Выборка всех локаций (активных или мягко удаленных)
+    по дефолту is_active = True, но можно передать в функцию False"""
+    stmt = select(Location).where(Location.is_active.is_(is_active))
+    return stmt
