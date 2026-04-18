@@ -19,26 +19,26 @@
 
 ## Установить Python
 Проверь установлен ли Python:
-```bash
-python3 --version
+bash
+```python3 --version```
 
 Установить Git
 
-```bash
-sudo apt install git -y
+bash
+```sudo apt install git -y```
 
-git --version
+```git --version```
 
 Установить PostgreSQL
-sudo apt install postgresql postgresql-contrib -y
+```sudo apt install postgresql postgresql-contrib -y```
 
-psql --version
+```psql --version```
 
 -- ** ШАГ 2. Скачать проект из GitHub **
 
 Открой терминал и перейди в папку, где будут проекты:
 к примеру:
-cd ~/Documents
+```cd ~/Documents```
 
 Скачать репозиторий:
 https://github.com/AleksNekrasov/instrumentsDB.git
@@ -52,54 +52,53 @@ https://github.com/AleksNekrasov/instrumentsDB.git
 ШАГ 4. Создать виртуальное окружение Python
 
 В терминале проекта:
-python3 -m venv venv
+```python3 -m venv venv```
 
-Активировать:
-source venv/bin/activate
+Активировать virtual environments:
+```source venv/bin/activate```
 
 ШАГ 5. Установить зависимости проекта
-pip install -r requirements.txt
-
+```pip install -r requirements.txt```
 Если ошибка pip старая:
-pip install --upgrade pip
-pip install -r requirements.txt
+```pip install --upgrade pip```
+```pip install -r requirements.txt```
 
 ШАГ 6. Настроить PostgreSQL
-sudo systemctl start postgresql
-sudo systemctl enable postgresql
+```sudo systemctl start postgresql```
+_```sudo systemctl enable postgresql```_
 
 Проверить:
-sudo systemctl status postgresql
+```sudo systemctl status postgresql```
 
 Зайти в PostgreSQL
-sudo -u postgres psql
+```sudo -u postgres psql```
 
 Создать пользователя БД
-CREATE DATABASE tools_db OWNER tool_user;
+```CREATE DATABASE tools_db OWNER tool_user;```
 
 Выдать права
-GRANT ALL PRIVILEGES ON DATABASE tools_db TO tool_user;
+```GRANT ALL PRIVILEGES ON DATABASE tools_db TO tool_user;```
 
 Выйти
-\q
+```\q```
 
 ШАГ 7. Создать файл .env
 В корне проекта создай файл .env:
 
 Вставь в него эту строку:
-DATABASE_URL=postgresql+asyncpg://tool_user:123456@localhost/tools_db
+```DATABASE_URL=postgresql+asyncpg://tool_user:123456@localhost/tools_db```
 
 📌 Что означает строка подключения
-postgresql+asyncpg://ЛОГИН:ПАРОЛЬ@ХОСТ/БАЗА
+**_postgresql+asyncpg://ЛОГИН:ПАРОЛЬ@ХОСТ/БАЗА_**
 
 ШАГ 8. Выполнить миграции Alembic
 В Терминале:
-alembic upgrade head
+```alembic upgrade head```
 Это создаст таблицы в PostgreSQL.
 
 ШАГ 9.Как Запустить проект:
 В Терминале:
-uvicorn app.main:app --reload
+```uvicorn app.main:app --reload```
 
 ШАГ 10. Открыть браузер
 После запуска:
@@ -111,27 +110,28 @@ http://127.0.0.1:8000/docs
 
 
 🔄 Каждый следующий запуск проекта
-cd project_folder   # заходим в проект 
-source venv/bin/activate
-uvicorn app.main:app --reload
+```cd project_folder```   # заходим в проект 
+```source venv/bin/activate```
+```uvicorn app.main:app --reload```
 
 
 ❗ Частые ошибки
 Ошибка: ModuleNotFoundError
 Решение:
-pip install -r requirements.txt
+```pip install -r requirements.txt```
 
 Ошибка: connection refused PostgreSQL
 Запустить БД:
-sudo systemctl start postgresql
+```sudo systemctl start postgresql```
 
 Ошибка: password authentication failed
 Проверь .env
 
 Ошибка: alembic не найден
-pip install alembic
+```pip install alembic```
 
 🚀 Если хочешь развернуть проект заново полностью
+```
 git clone ...
 cd ...
 python3 -m venv venv
@@ -141,11 +141,11 @@ pip install -r requirements.txt
 создать БД
 alembic upgrade head
 uvicorn app.main:app --reload
-
+```
 
 👨‍💻 Автор проекта
 Backend система учета инструментов на FastAPI.
-Некрасов Александр.
+**Некрасов Александр**.
 nsk540010@gmail.com
 
 
