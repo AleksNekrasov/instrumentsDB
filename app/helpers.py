@@ -67,3 +67,12 @@ def select_locations(is_active: bool = True) -> Select:
     по дефолту is_active = True, но можно передать в функцию False"""
     stmt = select(Location).where(Location.is_active.is_(is_active))
     return stmt
+
+def select_location_with_list_tools(location_id: int, is_active: bool = True) -> Select:
+    """select - запрос на выборку всего инструмента(даже удаленного в этой локации)"""
+    stmt = (select(Location)
+            .where(Location.is_active.is_(is_active))
+            .where(Location.id == location_id)
+            .options(selectinload(Location.tools))
+    )
+    return stmt

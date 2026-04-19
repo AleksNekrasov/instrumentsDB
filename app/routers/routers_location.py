@@ -4,9 +4,15 @@ from sqlalchemy import select, update
 
 from app.database_depends import get_db
 from app.table_models.table_location import Location
-from app.schemas_pydantic.location_pydantic import LocationUpdate, LocationResponse, LocationCreate, LocationDelete
+from app.schemas_pydantic.location_pydantic import (LocationUpdate,
+                                                    LocationResponse,
+                                                    LocationCreate,
+                                                    LocationDelete,
+                                                    LocationWithToolsResponse)
 
-from app.helpers import correct_name, select_locations
+from app.helpers import (correct_name,
+                         select_locations,
+                         select_location_with_list_tools)
 
 router = APIRouter(prefix='/locations', tags=["Locations"])
 
@@ -47,5 +53,16 @@ async def get_all_locations(db: AsyncSession = Depends(get_db)):
     locations = (await db.scalars(stmt)).all()
     return locations
 
+@router.get("/{location_id}", response_model=LocationWithToolsResponse)
+async def location_with_tools(location_id: int,
+                              db: AsyncSession = Depends(get_db)):
+    """Локация по id со списком инструментов в ней"""
+    stmt = select_location_with_list_tools(location_id=location_id)
+    location = (await db.scalars(stmt)).one_or_none()
+
+    if location is None:
+        raise HTTPException(status_code=404, detail="Location not found")
+
+    return location
 
 

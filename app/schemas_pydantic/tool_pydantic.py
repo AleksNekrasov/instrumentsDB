@@ -28,8 +28,14 @@ class ToolUpdate(BaseModel):
 
 class ToolResponse(ToolBase):
     """ Ответ API"""
-
     id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+class ToolShortResponse(BaseModel):
+    id: int
+    serial_number: str
+    status: StatusEnum
 
     model_config = ConfigDict(from_attributes=True)
 

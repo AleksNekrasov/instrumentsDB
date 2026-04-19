@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Annotated
+from app.schemas_pydantic.tool_pydantic import ToolShortResponse
 
 class LocationBase(BaseModel):
     name: Annotated[str, Field(..., min_length=3, max_length=20,
@@ -18,6 +19,14 @@ class LocationResponse(LocationBase):
     id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+class LocationWithToolsResponse(LocationBase):
+    """Ответ API"""
+    id: int
+    tools: list[ToolShortResponse]
+
+    model_config = ConfigDict(from_attributes=True)
+
 
 class LocationDelete(BaseModel):
     """Ответ API"""
