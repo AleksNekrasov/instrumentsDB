@@ -76,3 +76,9 @@ def select_location_with_list_tools(location_id: int, is_active: bool = True) ->
             .options(selectinload(Location.tools))
     )
     return stmt
+
+def update_model(obj, data: dict):
+    """Функция обновления объекта новыми значениями"""
+    for key, value in data.items():
+        if hasattr(obj, key):           # если у объекта есть атрибут с именем key (если есть ключ - key)
+            setattr(obj, key, value)    # то этому ключу key в объекте obj присваивается значение value

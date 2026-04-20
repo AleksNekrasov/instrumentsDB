@@ -6,7 +6,7 @@ from app.database_depends import get_db
 from app.table_models.table_employee import Employee
 from app.schemas_pydantic.employee_pydantic import EmployeeCreate, EmployeeResponse, EmployeeUpdate, EmployeeDelete
 
-from app.helpers import populate_employee_tools, select_true_employee, soft_delete
+from app.helpers import populate_employee_tools, select_true_employee, soft_delete, update_model
 
 router = APIRouter(prefix='/employees', tags=["Employees"])
 
@@ -86,11 +86,14 @@ async def put_employee_by_id(employee_id: int,
     if employee is None:
         raise HTTPException(status_code=404, detail="Employee not found (сотрудник не найден)")
 
-    await db.execute(
-        update(Employee)
-        .where(Employee.id == employee_id)
-        .values(**new_data.model_dump(exclude_unset=True))
-    )
+    # await db.execute(
+    #     update(Employee)
+    #     .where(Employee.id == employee_id)
+    #     .values(**new_data.model_dump(exclude_unset=True))
+    # )
+    data = new_data.model_dump(exclude_unset=True)  # распаковка объекта в словарь
+    update_model(obj=Employee, data=data)           # обновление объекта новыми данными
+
     await db.commit()
     employee = populate_employee_tools(employee)  # тут пока так, для корректного возврата EmployeeResponse
     return employee

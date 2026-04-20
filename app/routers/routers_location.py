@@ -12,7 +12,8 @@ from app.schemas_pydantic.location_pydantic import (LocationUpdate,
 
 from app.helpers import (correct_name,
                          select_locations,
-                         select_location_with_list_tools)
+                         select_location_with_list_tools,
+                         update_model)
 
 router = APIRouter(prefix='/locations', tags=["Locations"])
 
@@ -64,5 +65,25 @@ async def location_with_tools(location_id: int,
         raise HTTPException(status_code=404, detail="Location not found")
 
     return location
+
+@router.put("/{location_id}", response_model=LocationResponse)
+async  def put_location_by_id(location_id: int, location_update: LocationUpdate, db: AsyncSession = Depends(get_db)):
+    # ищем локацию
+    stmt = select_locations().where(Location.id == location_id)
+    location = (await db.scalars(stmt)).one_or_none()
+
+    if location is None:
+        raise HTTPException(status_code=404, detail="Location not found")
+
+    data = location_update.model_dump(exclude_unset=True)  # распаковка объекта в словарь
+
+    update_model(obj=Location, data=data) # обновляем наш объект новыми значениями
+
+    await db.commit()
+    await db.refresh(location)
+
+    return  location
+
+
 
 
