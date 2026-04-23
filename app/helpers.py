@@ -1,7 +1,7 @@
 from typing import Any, Type
 
 from sqlalchemy import Select, select, update, and_
-from sqlalchemy.orm import selectinload, with_loader_criteria
+from sqlalchemy.orm import selectinload, with_loader_criteria, DeclarativeBase
 
 from app.table_models.table_employee import Employee
 from app.table_models.table_tool import Tool
@@ -11,6 +11,29 @@ from app.table_models.table_location import Location
 
 
 from app.enum_file import StatusEnum
+
+def update_model(obj, data: dict):
+    """Функция обновления объекта новыми значениями"""
+    for key, value in data.items():
+        if hasattr(obj, key):           # если у объекта есть атрибут с именем key (если есть ключ - key)
+            setattr(obj, key, value)    # то этому ключу key в объекте obj присваивается значение value
+
+async def soft_delete(obj, db):
+    """Мягкое удаление объекта"""
+    obj.is_active = False
+    await db.commit()
+
+
+def correct_name(name: str) -> str:
+    """Возвращает строку в которой первая буква заглавная остальные строчные"""
+    return name.capitalize()
+
+def select_response(model: Type[DeclarativeBase], is_active: bool = True) -> Select:
+    """Выборка - select запрос модели. (активных или мягко удаленных)
+    по дефолту is_active = True, но можно передать в функцию False"""
+    stmt = select(model).where(model.is_active.is_(is_active))
+    return stmt
+
 
 
 def populate_employee_tools(employee: Employee) -> Employee:
@@ -52,22 +75,6 @@ def select_true_employee(is_active: bool = True) -> Select[tuple[Any]]:
     return stmt
 
 
-async def soft_delete(obj, db):
-    """Мягкое удаление объекта"""
-    obj.is_active = False
-    await db.commit()
-
-
-def correct_name(name: str) -> str:
-    """Возвращает строку в которой первая буква заглавная остальные строчные"""
-    return name.capitalize()
-
-def select_locations(is_active: bool = True) -> Select:
-    """Выборка всех локаций (активных или мягко удаленных)
-    по дефолту is_active = True, но можно передать в функцию False"""
-    stmt = select(Location).where(Location.is_active.is_(is_active))
-    return stmt
-
 def select_location_with_list_tools(location_id: int, is_active: bool = True) -> Select:
     """select - запрос на выборку всего инструмента(даже удаленного в этой локации)"""
     stmt = (select(Location)
@@ -77,8 +84,3 @@ def select_location_with_list_tools(location_id: int, is_active: bool = True) ->
     )
     return stmt
 
-def update_model(obj, data: dict):
-    """Функция обновления объекта новыми значениями"""
-    for key, value in data.items():
-        if hasattr(obj, key):           # если у объекта есть атрибут с именем key (если есть ключ - key)
-            setattr(obj, key, value)    # то этому ключу key в объекте obj присваивается значение value

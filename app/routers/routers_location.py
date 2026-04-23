@@ -11,7 +11,7 @@ from app.schemas_pydantic.location_pydantic import (LocationUpdate,
                                                     LocationWithToolsResponse)
 
 from app.helpers import (correct_name,
-                         select_locations,
+                         select_response,
                          select_location_with_list_tools,
                          update_model)
 
@@ -50,7 +50,7 @@ async def post_new_location(new_location: LocationCreate, db: AsyncSession = Dep
 @router.get("/", response_model=list[LocationResponse])
 async def get_all_locations(db: AsyncSession = Depends(get_db)):
     """возвращает список всех активных локаций"""
-    stmt = select_locations()
+    stmt = select_response(model=Location)
     locations = (await db.scalars(stmt)).all()
     return locations
 
@@ -69,20 +69,42 @@ async def location_with_tools(location_id: int,
 @router.put("/{location_id}", response_model=LocationResponse)
 async  def put_location_by_id(location_id: int, location_update: LocationUpdate, db: AsyncSession = Depends(get_db)):
     # ищем локацию
-    stmt = select_locations().where(Location.id == location_id)
+    stmt = select_response(model=Location).where(Location.id == location_id)
     location = (await db.scalars(stmt)).one_or_none()
 
     if location is None:
         raise HTTPException(status_code=404, detail="Location not found")
 
     data = location_update.model_dump(exclude_unset=True)  # распаковка объекта в словарь
-
     update_model(obj=Location, data=data) # обновляем наш объект новыми значениями
 
     await db.commit()
     await db.refresh(location)
-
     return  location
+
+@router.delete("/{location_id}", response_model=LocationDelete)
+async def del_location_by_id(location_id: int, db: AsyncSession = Depends(get_db)):
+    # ищем локацию
+    stmt = select_location_with_list_tools(location_id=location_id)
+    location = (await db.scalars(stmt)).one_or_none()
+
+    if location is None:
+        raise HTTPException(status_code=404, detail="Location not found")
+
+    if any(tool.is_active for tool in location.tools): # генератор проверяет каждую итерацию на True/False
+        raise HTTPException(
+            status_code=409,
+            detail="Cannot delete location: tools are stored here"
+        )
+
+    location.is_active  = False
+    await db.commit()
+    await db.refresh(location)
+
+    return location
+
+
+
 
 
 
