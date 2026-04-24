@@ -39,4 +39,18 @@ async def post_tool_model(new_model: ToolModelCreate, db: AsyncSession = Depends
     await db.refresh(tool_model)
     return  tool_model
 
+@router.get("/", response_model=list[ToolModelResponse])
+async def get_all_tool_models(db: AsyncSession = Depends(get_db)):
+    stmt = select_response(ToolModel)
+    all_tool_models = (await db.scalars(stmt)).all()
+    return all_tool_models
+
+@router.get("/{model_id}", response_model=ToolModelResponse)
+async def get_tool_model_by_id(model_id: int, db: AsyncSession = Depends(get_db)):
+    stmt = select_response(ToolModel).where(ToolModel.id == model_id)
+    tool_model = (await db.scalars(stmt)).one_or_none()
+    if tool_model is None:
+        raise HTTPException(status_code=404, detail="Tool Model not found")
+
+    return tool_model
 
