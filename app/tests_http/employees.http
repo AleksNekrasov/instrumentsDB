@@ -1,0 +1,61 @@
+### =====================================================
+### EMPLOYEES
+### Base URL: http://127.0.0.1:8000/employees
+### =====================================================
+
+
+### Создать сотрудника
+POST http://127.0.0.1:8000/employees/
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "Максим Орлов",
+  "position": "Техник"
+}
+
+
+### Получить список всех активных сотрудников
+GET http://127.0.0.1:8000/employees/
+Accept: application/json
+
+
+### Получить сотрудника по ID = 1
+GET http://127.0.0.1:8000/employees/1
+Accept: application/json
+
+
+### Частично обновить сотрудника (имя + должность)
+PATCH http://127.0.0.1:8000/employees/5
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "Иван Сергеев",
+  "position": "Начальник участка"
+}
+
+
+### Удалить сотрудника по ID = 1 (мягкое удаление)
+DELETE http://127.0.0.1:8000/employees/1
+Accept: application/json
+
+
+### Проверка 404 (несуществующий сотрудник)
+GET http://127.0.0.1:8000/employees/999
+Accept: application/json
+
+
+### Проверка PATCH 404
+PATCH http://127.0.0.1:8000/employees/999
+Accept: application/json
+Content-Type: application/json
+
+{
+  "position": "Тест"
+}
+
+
+### Проверка DELETE 404
+DELETE http://127.0.0.1:8000/employees/999
+Accept: application/json

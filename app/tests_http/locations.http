@@ -1,0 +1,85 @@
+### =====================================================
+### LOCATIONS
+### Base URL: http://127.0.0.1:8000/locations
+### =====================================================
+
+
+### Создать новую локацию
+POST http://127.0.0.1:8000/locations/
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "Мастерская"
+}
+
+
+### Получить список всех активных локаций
+GET http://127.0.0.1:8000/locations/
+Accept: application/json
+
+
+### Получить локацию по ID = 1 со списком инструмента
+GET http://127.0.0.1:8000/locations/4
+Accept: application/json
+
+
+### PATCH - изменить название локации
+PATCH http://127.0.0.1:8000/locations/4
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "Блок"
+}
+
+
+### DELETE - удалить локацию ID = 3
+DELETE http://127.0.0.1:8000/locations/3
+Accept: application/json
+
+
+### DELETE - попытка удалить локацию с инструментом
+DELETE http://127.0.0.1:8000/locations/1
+Accept: application/json
+
+
+### GET несуществующей локации
+GET http://127.0.0.1:8000/locations/999
+Accept: application/json
+
+
+### PATCH несуществующей локации
+PATCH http://127.0.0.1:8000/locations/999
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "Тест"
+}
+
+
+### DELETE несуществующей локации
+DELETE http://127.0.0.1:8000/locations/999
+Accept: application/json
+
+
+### PATCH - пустое тело (проверка)
+PATCH http://127.0.0.1:8000/locations/1
+Accept: application/json
+Content-Type: application/json
+
+{
+}
+
+
+### Проверка дубликата (если уже существует)
+POST http://127.0.0.1:8000/locations/
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "Склад"
+}
+
+

@@ -1,0 +1,77 @@
+### =====================================================
+### TOOL MODELS
+### Base URL: http://127.0.0.1:8000/tool-models
+### =====================================================
+
+
+### Создать модель инструмента
+POST http://127.0.0.1:8000/tool-models/
+Accept: application/json
+Content-Type: application/json
+
+{
+  "category": "Гайковерт",
+  "brand": "Milwaukee",
+  "model": "M18 FHIWF12"
+}
+
+
+### Получить все модели инструмента
+GET http://127.0.0.1:8000/tool-models/
+Accept: application/json
+
+
+### Получить модель по ID = 1
+GET http://127.0.0.1:8000/tool-models/1
+Accept: application/json
+
+
+### PATCH - изменить все поля
+PATCH http://127.0.0.1:8000/tool-models/1
+Accept: application/json
+Content-Type: application/json
+
+{
+  "category": "УШМ",
+  "brand": "Bosch Professional",
+  "model": "GWS 9-125"
+}
+
+
+### DELETE - мягкое удаление модели ID = 3
+DELETE http://127.0.0.1:8000/tool-models/3
+Accept: application/json
+
+
+### Проверка дубликата
+POST http://127.0.0.1:8000/tool-models/
+Accept: application/json
+Content-Type: application/json
+
+{
+  "category": "Болгарка",
+  "brand": "Bosch",
+  "model": "GWS 750"
+}
+
+
+### GET несуществующей модели
+GET http://127.0.0.1:8000/tool-models/999
+Accept: application/json
+
+
+### PATCH несуществующей модели
+PATCH http://127.0.0.1:8000/tool-models/999
+Accept: application/json
+Content-Type: application/json
+
+{
+  "model": "Test"
+}
+
+
+### DELETE несуществующей модели
+DELETE http://127.0.0.1:8000/tool-models/999
+Accept: application/json
+
+
