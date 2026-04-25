@@ -2,8 +2,8 @@ from fastapi import FastAPI
 
 from app.routers.routers_employee import router as employee_router
 from app.routers.routers_location import router as location_router
-from app.routers.routers_tool_model import router as model_router
-
+from app.routers.routers_tool_model import router as tool_model_router
+from app.routers.routers_tool import router as tool_router
 
 app = FastAPI(title="FastAPI база учета инструмента",
               version="0.1.0",
@@ -11,8 +11,8 @@ app = FastAPI(title="FastAPI база учета инструмента",
 
 app.include_router(employee_router)
 app.include_router(location_router)
-app.include_router(model_router)
-
+app.include_router(tool_model_router)
+app.include_router(tool_router)
 
 @app.get("/")
 async def root():

@@ -38,7 +38,13 @@ def correct_name(pydantic_model: BaseModel) -> BaseModel:
     data = pydantic_model.model_dump()
 
     for key, value in data.items():
-        if isinstance(value, str): # если значение является строкой:
+        if key == "status":                 # ничего не трогаем
+            continue
+        if key == "serial_number":
+            if isinstance(value, str):      # если значение строка и не None, убираем лишние пробелы
+                data[key] = value.strip()
+            continue
+        if isinstance(value, str):          # если значение является строкой:
             data[key] = value.strip().capitalize()
 
     return pydantic_model.__class__(**data)
