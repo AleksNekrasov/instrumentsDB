@@ -6,7 +6,11 @@ from app.database_depends import get_db
 from app.table_models.table_employee import Employee
 from app.schemas_pydantic.employee_pydantic import EmployeeCreate, EmployeeResponse, EmployeeUpdate, EmployeeDelete
 
-from app.helpers import populate_employee_tools, select_true_employee, soft_delete, update_model
+from app.helpers import (populate_employee_tools,
+                         select_true_employee,
+                         soft_delete_model,
+                         update_model,
+                         create_model)
 
 router = APIRouter(prefix='/employees', tags=["Employees"])
 
@@ -36,10 +40,11 @@ async def create_employee(employee_in: EmployeeCreate, db: AsyncSession = Depend
         return existing_employee
 
     # ✅ создаём нового
-    employee = Employee(**employee_in.model_dump())
-    db.add(employee)
-    await db.commit()
-    await db.refresh(employee)
+    employee = await create_model(model_class=Employee, pydantic_schema=employee_in, db=db)
+    # employee = Employee(**employee_in.model_dump())
+    # db.add(employee)
+    # await db.commit()
+    # await db.refresh(employee)
 
     return employee
 
@@ -75,7 +80,7 @@ async def get_employee_by_id(
     return employee
 
 
-@router.put("/{employee_id}", response_model=EmployeeResponse)
+@router.patch("/{employee_id}", response_model=EmployeeResponse)
 async def put_employee_by_id(employee_id: int,
                              new_data: EmployeeUpdate,
                              db: AsyncSession = Depends(get_db)):
@@ -92,7 +97,7 @@ async def put_employee_by_id(employee_id: int,
     #     .values(**new_data.model_dump(exclude_unset=True))
     # )
     data = new_data.model_dump(exclude_unset=True)  # распаковка объекта в словарь
-    update_model(obj=Employee, data=data)           # обновление объекта новыми данными
+    update_model(obj=employee, data=data)           # обновление объекта новыми данными
 
     await db.commit()
     employee = populate_employee_tools(employee)  # тут пока так, для корректного возврата EmployeeResponse
@@ -107,6 +112,6 @@ async def del_employee_by_id(employee_id: int, db: AsyncSession = Depends(get_db
     if employee is None:
         raise HTTPException(status_code=404, detail="Employee is not found(Сотрудник не найден)")
 
-    await soft_delete(obj=employee, db=db)
+    await soft_delete_model(obj=employee, db=db)
     await db.refresh(employee)
     return employee

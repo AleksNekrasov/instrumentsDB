@@ -1,7 +1,9 @@
 from typing import Any, Type
+from pydantic import BaseModel
 
 from sqlalchemy import Select, select, update, and_
 from sqlalchemy.orm import selectinload, with_loader_criteria, DeclarativeBase
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.table_models.table_employee import Employee
 from app.table_models.table_tool import Tool
@@ -12,21 +14,34 @@ from app.table_models.table_location import Location
 
 from app.enum_file import StatusEnum
 
+async def create_model(model_class: Type[DeclarativeBase], pydantic_schema: BaseModel, db: AsyncSession):
+    obj = model_class(**pydantic_schema.model_dump(exclude_unset=True))
+    db.add(obj)
+    await db.commit()
+    await db.refresh(obj)
+    return obj
+
 def update_model(obj, data: dict):
     """Функция обновления объекта новыми значениями"""
     for key, value in data.items():
-        if hasattr(obj, key):           # если у объекта есть атрибут с именем key (если есть ключ - key)
+        if value is not None and hasattr(obj, key):           # если у объекта есть атрибут с именем key (если есть ключ - key)
             setattr(obj, key, value)    # то этому ключу key в объекте obj присваивается значение value
 
-async def soft_delete(obj, db):
+async def soft_delete_model(obj, db):
     """Мягкое удаление объекта"""
     obj.is_active = False
     await db.commit()
 
 
-def correct_name(name: str) -> str:
-    """Возвращает строку в которой первая буква заглавная остальные строчные"""
-    return name.capitalize()
+def correct_name(pydantic_model: BaseModel) -> BaseModel:
+    """Возвращает объект pydantic полями в которых первая буква заглавная остальные строчные"""
+    data = pydantic_model.model_dump()
+
+    for key, value in data.items():
+        if isinstance(value, str): # если значение является строкой:
+            data[key] = value.strip().capitalize()
+
+    return pydantic_model.__class__(**data)
 
 def select_response(model: Type[DeclarativeBase], is_active: bool = True) -> Select:
     """Выборка - select запрос модели. (активных или мягко удаленных)

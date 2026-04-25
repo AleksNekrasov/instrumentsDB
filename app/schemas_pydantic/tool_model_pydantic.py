@@ -3,7 +3,7 @@ from typing import Annotated
 
 class ToolModelBase(BaseModel):
 
-    name: Annotated[str, Field(..., max_length=20,
+    category: Annotated[str, Field(..., max_length=20,
                                description="тип инструмента")]
     brand: Annotated[str, Field(..., max_length=20,
                                description="производитель")]
@@ -14,7 +14,7 @@ class ToolModelCreate(ToolModelBase):
     pass
 
 class ToolModelUpdate(BaseModel):
-    name: Annotated[str | None, Field(None, max_length=20,
+    category: Annotated[str | None, Field(None, max_length=20,
                                description="тип инструмента")] = None
     brand: Annotated[str | None, Field(None, max_length=20,
                                description="производитель")] = None

@@ -13,16 +13,17 @@ from app.schemas_pydantic.location_pydantic import (LocationUpdate,
 from app.helpers import (correct_name,
                          select_response,
                          select_location_with_list_tools,
-                         update_model)
+                         update_model,
+                         create_model)
 
 router = APIRouter(prefix='/locations', tags=["Locations"])
 
 @router.post("/", response_model=LocationResponse, status_code=201)
 async def post_new_location(new_location: LocationCreate, db: AsyncSession = Depends(get_db)):
     """ создание новой локации"""
-    normalized_name = correct_name(new_location.name) # приводим отправленное нам название локации в корректный вид
+    new_location = correct_name(pydantic_model=new_location) # приводим отправленные нам название локации в корректный вид
     # сначала ищем локацию в базе:
-    old_stmt = select(Location).where(Location.name == normalized_name)
+    old_stmt = select(Location).where(Location.name == new_location.name)
     old_location = (await db.scalars(old_stmt)).one_or_none()
 
     #если нашли такую локацию и она активна:
@@ -37,12 +38,12 @@ async def post_new_location(new_location: LocationCreate, db: AsyncSession = Dep
         return old_location
 
     # Если такая локация не найдена:
-    data = new_location.model_dump() # распаковка в словарь
-    data["name"] = normalized_name   # меняем name на корректную запись
-    location = Location(**data)      # записываем в новый объект Location
-    db.add(location)                 # добавляем в базу
-    await db.commit()
-    await db.refresh(location)
+    location = await create_model(model_class=Location, pydantic_schema=new_location, db=db)
+    # data = new_location.model_dump() # распаковка в словарь
+    # location = Location(**data)      # записываем в новый объект Location
+    # db.add(location)                 # добавляем в базу
+    # await db.commit()
+    # await db.refresh(location)
 
     return location
 
@@ -66,7 +67,7 @@ async def location_with_tools(location_id: int,
 
     return location
 
-@router.put("/{location_id}", response_model=LocationResponse)
+@router.patch("/{location_id}", response_model=LocationResponse)
 async  def put_location_by_id(location_id: int, location_update: LocationUpdate, db: AsyncSession = Depends(get_db)):
     # ищем локацию
     stmt = select_response(model=Location).where(Location.id == location_id)
@@ -76,7 +77,7 @@ async  def put_location_by_id(location_id: int, location_update: LocationUpdate,
         raise HTTPException(status_code=404, detail="Location not found")
 
     data = location_update.model_dump(exclude_unset=True)  # распаковка объекта в словарь
-    update_model(obj=Location, data=data) # обновляем наш объект новыми значениями
+    update_model(obj=location, data=data) # обновляем наш объект новыми значениями
 
     await db.commit()
     await db.refresh(location)
