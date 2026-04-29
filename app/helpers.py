@@ -11,8 +11,8 @@ from app.table_models.table_tool_model import ToolModel
 from app.table_models.table_tool_issue import ToolIssue
 from app.table_models.table_location import Location
 
-
 from app.enum_file import StatusEnum
+
 
 async def create_model(model_class: Type[DeclarativeBase], pydantic_schema: BaseModel, db: AsyncSession):
     obj = model_class(**pydantic_schema.model_dump(exclude_unset=True))
@@ -21,11 +21,13 @@ async def create_model(model_class: Type[DeclarativeBase], pydantic_schema: Base
     await db.refresh(obj)
     return obj
 
+
 def update_model(obj, data: dict):
     """Функция обновления объекта новыми значениями"""
     for key, value in data.items():
-        if value is not None and hasattr(obj, key):           # если у объекта есть атрибут с именем key (если есть ключ - key)
-            setattr(obj, key, value)    # то этому ключу key в объекте obj присваивается значение value
+        if value is not None and hasattr(obj, key):  # если у объекта есть атрибут с именем key (если есть ключ - key)
+            setattr(obj, key, value)  # то этому ключу key в объекте obj присваивается значение value
+
 
 async def soft_delete_model(obj, db):
     """Мягкое удаление объекта"""
@@ -38,16 +40,17 @@ def correct_name(pydantic_model: BaseModel) -> BaseModel:
     data = pydantic_model.model_dump()
 
     for key, value in data.items():
-        if key == "status":                 # ничего не трогаем
+        if key == "status":  # ничего не трогаем
             continue
         if key == "serial_number":
-            if isinstance(value, str):      # если значение строка и не None, убираем лишние пробелы
+            if isinstance(value, str):  # если значение строка и не None, убираем лишние пробелы
                 data[key] = value.strip()
             continue
-        if isinstance(value, str):          # если значение является строкой:
+        if isinstance(value, str):  # если значение является строкой:
             data[key] = value.strip().capitalize()
 
     return pydantic_model.__class__(**data)
+
 
 def select_response(model: Type[DeclarativeBase], is_active: bool = True) -> Select:
     """Выборка - select запрос модели. (активных или мягко удаленных)
@@ -55,6 +58,14 @@ def select_response(model: Type[DeclarativeBase], is_active: bool = True) -> Sel
     stmt = select(model).where(model.is_active.is_(is_active))
     return stmt
 
+
+async def get_by_id(model_class: type[DeclarativeBase],
+                    obj_id: int,
+                    db: AsyncSession,
+                    is_active: bool = True) -> Any:
+    """Ф-ия возвращает ORM-объект по запросу поиска объекта по ID. По дефолту is_active = True, но можно передать False"""
+    stmt = select_response(model_class, is_active=is_active).where(model_class.id == obj_id)
+    return await db.scalar(stmt)
 
 
 def populate_employee_tools(employee: Employee) -> Employee:
@@ -102,6 +113,5 @@ def select_location_with_list_tools(location_id: int, is_active: bool = True) ->
             .where(Location.is_active.is_(is_active))
             .where(Location.id == location_id)
             .options(selectinload(Location.tools))
-    )
+            )
     return stmt
-

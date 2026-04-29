@@ -3,6 +3,7 @@ from typing import Annotated
 from datetime import date
 
 from app.enum_file import StatusEnum
+from app.schemas_pydantic.tool_model_pydantic import ToolModelBase
 
 
 class ToolBase(BaseModel):
@@ -24,11 +25,12 @@ class ToolUpdate(BaseModel):
     purchase_date: Annotated[date | None, Field(None, description="Дата покупки")] = None
     status: Annotated[StatusEnum | None, Field(None, description="статус инструмента")] = None
     location_id: Annotated[int | None, Field(None, description="id локации инструмента")] = None
-    employee_id: Annotated[int | None, Field(None, description="id сотрудника")] = None
+    # employee_id: Annotated[int | None, Field(None, description="id сотрудника")] = None
 
 class ToolResponse(ToolBase):
     """ Ответ API"""
     id: int
+    tool_model: ToolModelBase
 
     model_config = ConfigDict(from_attributes=True)
 
