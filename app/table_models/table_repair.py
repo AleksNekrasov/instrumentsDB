@@ -1,3 +1,7 @@
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from app.table_models.table_tool import Tool
+
 from sqlalchemy import String, Integer, ForeignKey, DateTime, func, DECIMAL
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from datetime import datetime

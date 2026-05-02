@@ -1,3 +1,8 @@
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from app.table_models.table_tool import Tool
+    from app.table_models.table_employee import Employee
+
 from sqlalchemy import Integer, String, ForeignKey, DateTime, func, Index
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from datetime import datetime

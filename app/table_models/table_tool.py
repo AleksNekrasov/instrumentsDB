@@ -1,3 +1,11 @@
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from app.table_models.table_tool_model import ToolModel
+    from app.table_models.table_repair import Repair
+    from app.table_models.table_location import Location
+    from app.table_models.table_tool_movement import ToolMovement
+    from app.table_models.table_tool_issue import ToolIssue
+
 from sqlalchemy import String, Integer, ForeignKey, func, Date, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import date

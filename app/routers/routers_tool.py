@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
-from sqlalchemy.orm import selectinload, with_loader_criteria, DeclarativeBase
+from sqlalchemy.orm import selectinload, with_loader_criteria
 
 from app.table_models.table_tool_model import ToolModel
 from app.table_models.table_location import Location
 from app.table_models.table_employee import Employee
+
+from app.enum_file import StatusEnum
 
 from app.database_depends import get_db
 from app.table_models.table_tool import Tool
@@ -115,16 +117,49 @@ async def patch_tool(tool_id: int, new_patch: ToolUpdate, db: AsyncSession = Dep
     updated_tool = (await db.scalar(stmt))
     return updated_tool
 
-@router.delete("/{tool_id}", response_model=ToolResponse)
+@router.delete("/{tool_id}")
 async def del_tool(tool_id: int, db: AsyncSession = Depends(get_db)):
     """пока не знаю как правильно удалять инструмент.
     В какой локации он должен находиться для списания и можно ли списывать когда инструмент у сотрудника,
     или сначала переместить его на склад, забрать у сотрудника, потом списать"""
-    tool = await get_by_id(model_class=Tool, obj_id=tool_id, db=db)
+
+
+    """Переделать полностью. через options подгружаем локацию, проверяем на is_active и чтобы name == склад"""
+    stmt = (select(Tool)
+            .where(Tool.id == tool_id, Tool.is_active.is_(True))
+            .options(selectinload(Tool.location),selectinload(Tool.tool_model))
+            )
+    tool: Tool | None = (await db.scalars(stmt)).one_or_none()
+
     if tool is None:
-        raise HTTPException(status_code=404, detail=f"tool with id={tool_id} not found")
-    await soft_delete_model(tool, db)
-    await db.refresh(tool)
-    return tool
+        raise HTTPException(404, "Инструмент не найден")
+
+    if tool.location is None:
+        raise HTTPException(400, "У инструмента нет локации")
+
+    if not tool.location.is_active:
+        raise HTTPException(400, "Локация неактивна")
+
+    if tool.location.name != "Склад":
+        raise HTTPException(
+            400,
+            f"Инструмент находится в '{tool.location.name}', а не на складе"
+        )
+
+    tool.status = StatusEnum.WRITTEN_OFF
+    tool.is_active = False
+    try:
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+    return {
+        "message": "Инструмент списан",
+        "tool_id": tool.id
+    }
+
+
+
 
 

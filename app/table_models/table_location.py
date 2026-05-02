@@ -1,4 +1,8 @@
-from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from app.table_models.table_tool_movement import ToolMovement
+    from app.table_models.table_tool import Tool
+
 
 from sqlalchemy import String, Integer, Boolean
 from sqlalchemy.orm import mapped_column, Mapped, relationship

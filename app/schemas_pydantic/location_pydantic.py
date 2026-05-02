@@ -15,7 +15,6 @@ class LocationUpdate(BaseModel):
 
 class LocationResponse(LocationBase):
     """Ответ API"""
-
     id: int
 
     model_config = ConfigDict(from_attributes=True)
