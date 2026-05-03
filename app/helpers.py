@@ -14,10 +14,15 @@ from app.table_models.table_location import Location
 from app.enum_file import StatusEnum
 
 
-async def create_model(model_class: Type[DeclarativeBase], pydantic_schema: BaseModel, db: AsyncSession):
-    obj = model_class(**pydantic_schema.model_dump(exclude_unset=True))
+async def create_model(model_class: Type[DeclarativeBase], pydantic_schema: BaseModel, db: AsyncSession, exclude_unset: bool = False):
+    """запись модели в базу данных, по умолчанию exclude_unset=False"""
+    obj = model_class(**pydantic_schema.model_dump(exclude_unset=exclude_unset))
     db.add(obj)
-    await db.commit()
+    try:
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
     await db.refresh(obj)
     return obj
 

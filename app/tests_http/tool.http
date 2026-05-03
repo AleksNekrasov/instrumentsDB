@@ -1,0 +1,66 @@
+### =========================
+### CREATE TOOL
+### =========================
+POST http://127.0.0.1:8000/tools/
+Content-Type: application/json
+
+{
+  "model_id": 1,
+  "serial_number": "SN-10001",
+  "purchase_date": "2024-01-10",
+  "status": "ACTIVE",
+  "location_id": 1,
+  "employee_id": 1
+}
+
+
+### =========================
+### GET ALL TOOLS
+### =========================
+GET http://127.0.0.1:8000/tools/
+
+
+### =========================
+### GET TOOL BY ID
+### =========================
+GET http://127.0.0.1:8000/tools/1
+
+
+### =========================
+### PATCH TOOL (update serial)
+### =========================
+PATCH http://127.0.0.1:8000/tools/1
+Content-Type: application/json
+
+{
+  "serial_number": "SN-UPDATED-001"
+}
+
+
+### =========================
+### PATCH TOOL (change model)
+### =========================
+PATCH http://127.0.0.1:8000/tools/1
+Content-Type: application/json
+
+{
+  "model_id": 1
+}
+
+
+### =========================
+### PATCH TOOL (change location)
+### =========================
+PATCH http://127.0.0.1:8000/tools/1
+Content-Type: application/json
+
+{
+  "location_id": 1
+}
+
+
+### =========================
+### DELETE / WRITEOFF TOOL
+### (работает только если инструмент на "Склад")
+### =========================
+DELETE http://127.0.0.1:8000/tools/1

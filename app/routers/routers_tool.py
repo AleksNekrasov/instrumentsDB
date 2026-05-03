@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic_settings.sources.providers import aws
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from sqlalchemy.orm import selectinload, with_loader_criteria
@@ -43,10 +44,10 @@ async def create_tool(new_tool: ToolCreate, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Нет такой локации, создайте сначала локацию")
 
     # проверим сотрудника, если передали его ID:
-    if new_tool.employee_id is not None:
-        db_employee = await get_by_id(model_class=Employee, obj_id=new_tool.employee_id, db=db)
-        if db_employee is None:
-            raise HTTPException(status_code=404, detail="Нет такого сотрудника, сначала создайте сотрудника")
+    # if new_tool.employee_id is not None:
+    #     db_employee = await get_by_id(model_class=Employee, obj_id=new_tool.employee_id, db=db)
+    #     if db_employee is None:
+    #         raise HTTPException(status_code=404, detail="Нет такого сотрудника, сначала создайте сотрудника")
 
     # создаем инструмент
     # tool = Tool(**new_tool.model_dump(exclude_unset=True))
@@ -55,7 +56,9 @@ async def create_tool(new_tool: ToolCreate, db: AsyncSession = Depends(get_db)):
     # await db.refresh(tool)
     # return tool
     tool = await create_model(model_class=Tool, pydantic_schema=new_tool, db=db)
-    return tool
+    stmt = select_response(Tool).where(Tool.id == tool.id).options(selectinload(Tool.tool_model))
+
+    return await db.scalar(stmt)
 
 
 @router.get("/", response_model=list[ToolResponse])

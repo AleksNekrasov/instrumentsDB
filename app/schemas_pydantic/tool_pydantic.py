@@ -13,7 +13,7 @@ class ToolBase(BaseModel):
     purchase_date: Annotated[date | None, Field(None, description="Дата покупки")] = None
     status: Annotated[StatusEnum, Field(..., description="статус инструмента")] = StatusEnum.ACTIVE
     location_id: Annotated[int, Field(..., description="id локации инструмента")]
-    employee_id: Annotated[int | None, Field(None, description="id сотрудника")] = None
+    #employee_id: Annotated[int | None, Field(None, description="id сотрудника")] = None
 
 class ToolCreate(ToolBase):
     pass
