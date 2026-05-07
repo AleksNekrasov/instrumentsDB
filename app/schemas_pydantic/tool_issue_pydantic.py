@@ -13,9 +13,9 @@ class ToolIssueCreate(ToolIssueBase):
     pass
 
 class ToolIssueUpdate(BaseModel):
-    tool_id: Annotated[int | None, Field(None, description="id инструмента")] = None
-    employee_id: Annotated[int | None, Field(None, description="id работника")] = None
-    issue_date: Annotated[datetime | None, Field(None, description="Дата выдачи")] = None
+    # tool_id: Annotated[int | None, Field(None, description="id инструмента")] = None
+    # employee_id: Annotated[int | None, Field(None, description="id работника")] = None
+    # issue_date: Annotated[datetime | None, Field(None, description="Дата выдачи")] = None
     return_date: Annotated[datetime | None, Field(None, description="Дата возврата")] = None
 
 class ToolIssueResponse(ToolIssueBase):
