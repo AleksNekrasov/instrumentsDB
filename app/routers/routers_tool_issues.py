@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy import select
@@ -6,19 +6,13 @@ from sqlalchemy import select
 from datetime import datetime, UTC
 
 from app.database_depends import get_db
-from app.table_models import Tool
 
 from app.table_models.table_tool_issue import ToolIssue
 from app.table_models.table_tool import Tool
 from app.table_models.table_employee import Employee
 from app.schemas_pydantic.tool_issue_pydantic import (ToolIssueCreate,
-                                                      ToolIssueUpdate,
                                                       ToolIssueResponse)
-from app.helpers import (correct_name,
-                         select_response,
-                         update_model,
-                         create_model,
-                         soft_delete_model)
+from app.helpers import select_response
 
 from app.enum_file import StatusEnum
 
@@ -27,7 +21,6 @@ router = APIRouter(prefix='/tool-issues', tags=["ToolIssues"])
 
 @router.post('/', status_code=201, response_model=ToolIssueResponse)
 async def create_tool_issue(new_tool_issue: ToolIssueCreate, db: AsyncSession = Depends(get_db)):
-    """ДОДЕЛАТЬ!! СЕЙЧАС ПРИ ВЫДАЧЕ ИНСТРУМЕНТА ПО ФАКТУ ИНСТРУМЕНТ ОСТАЕТСЯ В ПЕРЖНЕЙ ЛОКАЦИИ"""
     # Проверка  tool_id существует ли инструмент
     tool_stmt = (select_response(Tool)
                  .where(Tool.id == new_tool_issue.tool_id)

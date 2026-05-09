@@ -5,8 +5,8 @@ POST http://127.0.0.1:8000/tool-issues/
 Content-Type: application/json
 
 {
-  "tool_id": 1,
-  "employee_id": 1
+  "tool_id": 8,
+  "employee_id": 8
 }
 
 

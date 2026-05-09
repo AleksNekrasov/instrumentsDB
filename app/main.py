@@ -5,7 +5,7 @@ from app.routers.routers_location import router as location_router
 from app.routers.routers_tool_model import router as tool_model_router
 from app.routers.routers_tool import router as tool_router
 from app.routers.routers_tool_issues import router as tool_issue_router
-
+from app.routers.routers_tool_movement import router as tool_movement_router
 
 
 app = FastAPI(title="FastAPI база учета инструмента",
@@ -17,7 +17,7 @@ app.include_router(location_router)
 app.include_router(tool_model_router)
 app.include_router(tool_router)
 app.include_router(tool_issue_router)
-
+app.include_router(tool_movement_router)
 
 
 @app.get("/")
