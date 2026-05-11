@@ -48,3 +48,18 @@ async def create_new_repair(new_repair: RepairCreate, db: AsyncSession = Depends
         raise
     await db.refresh(repair)
     return repair
+
+@router.get("/", response_model=list[RepairResponse])
+async def get_all_repairs(db: AsyncSession = Depends(get_db)):
+    stmt = select(Repair)
+    list_repairs = (await db.scalars(stmt)).all()
+    return list_repairs
+
+@router.get("/{repair_id}", response_model=RepairResponse)
+async def get_repair_by_id(repair_id: int, db: AsyncSession = Depends(get_db)):
+    stmt = select(Repair).where(Repair.id == repair_id)
+    repair: Repair | None = (await db.scalars(stmt)).one_or_none()
+    if repair is None:
+        raise HTTPException(status_code=404, detail=f"repair with id={repair_id} not found")
+
+    return repair
