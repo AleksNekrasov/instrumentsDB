@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 
-from app.database_depends import get_db
+from app.database_depends import get_async_db
 from app.table_models.table_location import Location
 from app.schemas_pydantic.location_pydantic import (LocationUpdate,
                                                     LocationResponse,
@@ -19,7 +19,7 @@ from app.helpers import (correct_name,
 router = APIRouter(prefix='/locations', tags=["Locations"])
 
 @router.post("/", response_model=LocationResponse, status_code=201)
-async def post_new_location(new_location: LocationCreate, db: AsyncSession = Depends(get_db)):
+async def post_new_location(new_location: LocationCreate, db: AsyncSession = Depends(get_async_db)):
     """ создание новой локации"""
     new_location = correct_name(pydantic_model=new_location) # приводим отправленные нам название локации в корректный вид
     # сначала ищем локацию в базе:
@@ -49,7 +49,7 @@ async def post_new_location(new_location: LocationCreate, db: AsyncSession = Dep
 
 
 @router.get("/", response_model=list[LocationResponse])
-async def get_all_locations(db: AsyncSession = Depends(get_db)):
+async def get_all_locations(db: AsyncSession = Depends(get_async_db)):
     """возвращает список всех активных локаций"""
     stmt = select_response(model=Location)
     locations = (await db.scalars(stmt)).all()
@@ -57,7 +57,7 @@ async def get_all_locations(db: AsyncSession = Depends(get_db)):
 
 @router.get("/{location_id}", response_model=LocationWithToolsResponse)
 async def location_with_tools(location_id: int,
-                              db: AsyncSession = Depends(get_db)):
+                              db: AsyncSession = Depends(get_async_db)):
     """Локация по id со списком инструментов в ней"""
     stmt = select_location_with_list_tools(location_id=location_id)
     location = (await db.scalars(stmt)).one_or_none()
@@ -68,7 +68,7 @@ async def location_with_tools(location_id: int,
     return location
 
 @router.patch("/{location_id}", response_model=LocationResponse)
-async  def put_location_by_id(location_id: int, location_update: LocationUpdate, db: AsyncSession = Depends(get_db)):
+async  def put_location_by_id(location_id: int, location_update: LocationUpdate, db: AsyncSession = Depends(get_async_db)):
     # ищем локацию
     stmt = select_response(model=Location).where(Location.id == location_id)
     location = (await db.scalars(stmt)).one_or_none()
@@ -84,7 +84,7 @@ async  def put_location_by_id(location_id: int, location_update: LocationUpdate,
     return  location
 
 @router.delete("/{location_id}", response_model=LocationDelete)
-async def del_location_by_id(location_id: int, db: AsyncSession = Depends(get_db)):
+async def del_location_by_id(location_id: int, db: AsyncSession = Depends(get_async_db)):
     # ищем локацию
     stmt = select_location_with_list_tools(location_id=location_id)
     location = (await db.scalars(stmt)).one_or_none()

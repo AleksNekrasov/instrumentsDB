@@ -5,3 +5,4 @@ from .table_tool import Tool
 from .table_tool_issue import ToolIssue
 from .table_tool_model import ToolModel
 from .table_tool_movement import ToolMovement
+from .table_user_model import UserModel

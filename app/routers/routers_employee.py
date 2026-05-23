@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.database_depends import get_db
+from app.database_depends import get_async_db
 from app.table_models.table_employee import Employee
 from app.schemas_pydantic.employee_pydantic import EmployeeCreate, EmployeeResponse, EmployeeUpdate, EmployeeDelete
 
@@ -16,7 +16,7 @@ router = APIRouter(prefix='/employees', tags=["Employees"])
 
 
 @router.post("/", status_code=201, response_model=EmployeeResponse)
-async def create_employee(employee_in: EmployeeCreate, db: AsyncSession = Depends(get_db)):
+async def create_employee(employee_in: EmployeeCreate, db: AsyncSession = Depends(get_async_db)):
     """Создание нового сотрудника"""
     # 🔍 ищем сотрудника
     stmt = select(Employee).where(
@@ -50,7 +50,7 @@ async def create_employee(employee_in: EmployeeCreate, db: AsyncSession = Depend
 
 
 @router.get("/", status_code=200, response_model=list[EmployeeResponse])
-async def get_all_employees(db: AsyncSession = Depends(get_db)):
+async def get_all_employees(db: AsyncSession = Depends(get_async_db)):
     """Получение списка всех активных сотрудников и их инструмента"""
     stmt = select_true_employee()
     result = (await db.scalars(stmt)).all()
@@ -66,7 +66,7 @@ async def get_all_employees(db: AsyncSession = Depends(get_db)):
 @router.get("/{employee_id}", response_model=EmployeeResponse)
 async def get_employee_by_id(
         employee_id: int,
-        db: AsyncSession = Depends(get_db)
+        db: AsyncSession = Depends(get_async_db)
 ):
     stmt = select_true_employee().where(Employee.id == employee_id)
     result = (await db.scalars(stmt)).one_or_none()
@@ -83,7 +83,7 @@ async def get_employee_by_id(
 @router.patch("/{employee_id}", response_model=EmployeeResponse)
 async def put_employee_by_id(employee_id: int,
                              new_data: EmployeeUpdate,
-                             db: AsyncSession = Depends(get_db)):
+                             db: AsyncSession = Depends(get_async_db)):
     """ сырая функция обновления сотрудника (Нужно доработать)"""
     emp_stmt = select_true_employee().where(Employee.id == employee_id)
     employee = (await db.scalars(emp_stmt)).unique().one_or_none()
@@ -105,7 +105,7 @@ async def put_employee_by_id(employee_id: int,
 
 
 @router.delete("/{employee_id}", response_model=EmployeeDelete, status_code=200)
-async def del_employee_by_id(employee_id: int, db: AsyncSession = Depends(get_db)):
+async def del_employee_by_id(employee_id: int, db: AsyncSession = Depends(get_async_db)):
     stmt = select_true_employee().where(Employee.id == employee_id)
     employee = (await db.scalars(stmt)).unique().one_or_none()
 

@@ -5,7 +5,7 @@ from sqlalchemy import select
 
 from datetime import datetime, UTC
 
-from app.database_depends import get_db
+from app.database_depends import get_async_db
 
 from app.table_models.table_tool_issue import ToolIssue
 from app.table_models.table_tool import Tool
@@ -20,7 +20,7 @@ router = APIRouter(prefix='/tool-issues', tags=["ToolIssues"])
 
 
 @router.post('/', status_code=201, response_model=ToolIssueResponse)
-async def create_tool_issue(new_tool_issue: ToolIssueCreate, db: AsyncSession = Depends(get_db)):
+async def create_tool_issue(new_tool_issue: ToolIssueCreate, db: AsyncSession = Depends(get_async_db)):
     # Проверка  tool_id существует ли инструмент
     tool_stmt = (select_response(Tool)
                  .where(Tool.id == new_tool_issue.tool_id)
@@ -81,18 +81,18 @@ async def create_tool_issue(new_tool_issue: ToolIssueCreate, db: AsyncSession = 
 
 
 @router.get("/issued", response_model=list[ToolIssueResponse])
-async def get_issued_tools(db: AsyncSession = Depends(get_db)):
+async def get_issued_tools(db: AsyncSession = Depends(get_async_db)):
     list_tool_issues = (await db.scalars(select(ToolIssue).where(ToolIssue.return_date.is_(None)))).all()
     return list_tool_issues
 
 
 @router.get("/returned", response_model=list[ToolIssueResponse])
-async def get_returned_tools(db: AsyncSession = Depends(get_db)):
+async def get_returned_tools(db: AsyncSession = Depends(get_async_db)):
     list_tool_issues = (await db.scalars(select(ToolIssue).where(ToolIssue.return_date.is_not(None)))).all()
     return list_tool_issues
 
 @router.get("/{tool_issue_id}", response_model=ToolIssueResponse)
-async def get_tool_issue_by_id(tool_issue_id: int, db: AsyncSession = Depends(get_db)):
+async def get_tool_issue_by_id(tool_issue_id: int, db: AsyncSession = Depends(get_async_db)):
     stmt = (select(ToolIssue)
             .where(ToolIssue.id == tool_issue_id))
     tool_issue = (await db.scalars(stmt)).one_or_none()
@@ -102,7 +102,7 @@ async def get_tool_issue_by_id(tool_issue_id: int, db: AsyncSession = Depends(ge
 
 
 @router.patch("/{tool_issue_id}", response_model=ToolIssueResponse)
-async def patch_tool_issue(tool_issue_id: int, db: AsyncSession = Depends(get_db)):
+async def patch_tool_issue(tool_issue_id: int, db: AsyncSession = Depends(get_async_db)):
     # загружаем изменяемую выдачу инструмента
     stmt_tool_issue = select(ToolIssue).where(ToolIssue.id == tool_issue_id).options(selectinload(ToolIssue.tool))
     tool_issue: ToolIssue | None = (await db.scalars(stmt_tool_issue)).one_or_none()

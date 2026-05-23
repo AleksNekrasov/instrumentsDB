@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database_depends import get_db
+from app.database_depends import get_async_db
 
 from app.table_models.table_tool_model import ToolModel
 from app.schemas_pydantic.tool_model_pydantic import (ToolModelCreate,
@@ -17,7 +17,7 @@ router = APIRouter(prefix='/tool-models', tags=["ToolModels"])
 
 
 @router.post("/", status_code=201, response_model=ToolModelResponse)
-async def post_tool_model(new_model: ToolModelCreate, db: AsyncSession = Depends(get_db)):
+async def post_tool_model(new_model: ToolModelCreate, db: AsyncSession = Depends(get_async_db)):
     # немного корректируем строки(чтобы начинались с Большой буквы)
     new_model = correct_name(pydantic_model=new_model)
 
@@ -37,13 +37,13 @@ async def post_tool_model(new_model: ToolModelCreate, db: AsyncSession = Depends
     return  tool_model
 
 @router.get("/", response_model=list[ToolModelResponse])
-async def get_all_tool_models(db: AsyncSession = Depends(get_db)):
+async def get_all_tool_models(db: AsyncSession = Depends(get_async_db)):
     stmt = select_response(ToolModel)
     all_tool_models = (await db.scalars(stmt)).all()
     return all_tool_models
 
 @router.get("/{model_id}", response_model=ToolModelResponse)
-async def get_tool_model_by_id(model_id: int, db: AsyncSession = Depends(get_db)):
+async def get_tool_model_by_id(model_id: int, db: AsyncSession = Depends(get_async_db)):
     stmt = select_response(ToolModel).where(ToolModel.id == model_id)
     tool_model = (await db.scalars(stmt)).one_or_none()
     if tool_model is None:
@@ -52,7 +52,7 @@ async def get_tool_model_by_id(model_id: int, db: AsyncSession = Depends(get_db)
     return tool_model
 
 @router.patch("/{model_id}", response_model=ToolModelResponse)
-async def put_tool_model(model_id: int, new_data: ToolModelUpdate, db: AsyncSession = Depends(get_db)):
+async def put_tool_model(model_id: int, new_data: ToolModelUpdate, db: AsyncSession = Depends(get_async_db)):
     # немного корректируем строки(чтобы начинались с Большой буквы)
     new_data = correct_name(pydantic_model=new_data)
     stmt = select_response(model=ToolModel).where(ToolModel.id == model_id)
@@ -71,7 +71,7 @@ async def put_tool_model(model_id: int, new_data: ToolModelUpdate, db: AsyncSess
     return tool_model
 
 @router.delete("/{tool_model_id}", response_model=ToolModelResponse)
-async def del_tool_model_by_id(tool_model_id: int, db: AsyncSession = Depends(get_db)):
+async def del_tool_model_by_id(tool_model_id: int, db: AsyncSession = Depends(get_async_db)):
     # ищем нужную модель
     stmt = select_response(model=ToolModel).where(ToolModel.id == tool_model_id)
     tool_model = (await  db.scalars(stmt)).one_or_none()

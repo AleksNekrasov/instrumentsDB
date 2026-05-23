@@ -10,7 +10,7 @@ from app.table_models.table_employee import Employee
 
 from app.enum_file import StatusEnum
 
-from app.database_depends import get_db
+from app.database_depends import get_async_db
 from app.table_models.table_tool import Tool
 from app.schemas_pydantic.tool_pydantic import (ToolResponse,
                                                 ToolCreate,
@@ -28,7 +28,7 @@ router = APIRouter(prefix="/tools", tags=["Tools"])
 
 
 @router.post("/", status_code=201, response_model=ToolResponse)
-async def create_tool(new_tool: ToolCreate, db: AsyncSession = Depends(get_db)):
+async def create_tool(new_tool: ToolCreate, db: AsyncSession = Depends(get_async_db)):
     # сначала приводим строки к корректному виду:
     new_tool = correct_name(pydantic_model=new_tool)
 
@@ -62,7 +62,7 @@ async def create_tool(new_tool: ToolCreate, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/", response_model=list[ToolResponse])
-async def get_all_tools(db: AsyncSession = Depends(get_db)):
+async def get_all_tools(db: AsyncSession = Depends(get_async_db)):
     stmt = (select_response(Tool)
             .options(selectinload(Tool.tool_model)
                      )
@@ -74,7 +74,7 @@ async def get_all_tools(db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/{tool_id}", response_model=ToolResponse)
-async def get_tool_by_id(tool_id: int, db: AsyncSession = Depends(get_db)):
+async def get_tool_by_id(tool_id: int, db: AsyncSession = Depends(get_async_db)):
     stmt = (select_response(Tool)
             .where(Tool.id == tool_id)
             .options(selectinload(Tool.tool_model)
@@ -89,7 +89,7 @@ async def get_tool_by_id(tool_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.patch("/{tool_id}", response_model=ToolResponse)
-async def patch_tool(tool_id: int, new_patch: ToolUpdate, db: AsyncSession = Depends(get_db)):
+async def patch_tool(tool_id: int, new_patch: ToolUpdate, db: AsyncSession = Depends(get_async_db)):
     tool = await get_by_id(Tool, tool_id, db=db)
 
     if tool is None:
@@ -121,7 +121,7 @@ async def patch_tool(tool_id: int, new_patch: ToolUpdate, db: AsyncSession = Dep
     return updated_tool
 
 @router.delete("/{tool_id}")
-async def del_tool(tool_id: int, db: AsyncSession = Depends(get_db)):
+async def del_tool(tool_id: int, db: AsyncSession = Depends(get_async_db)):
     """пока не знаю как правильно удалять инструмент.
     В какой локации он должен находиться для списания и можно ли списывать когда инструмент у сотрудника,
     или сначала переместить его на склад, забрать у сотрудника, потом списать"""

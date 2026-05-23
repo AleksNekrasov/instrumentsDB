@@ -5,7 +5,7 @@ from sqlalchemy import select
 
 from datetime import datetime, UTC
 
-from app.database_depends import get_db
+from app.database_depends import get_async_db
 
 from app.schemas_pydantic.repair_pydantic import (RepairCreate,
                                                   RepairUpdate,
@@ -20,7 +20,7 @@ from app.helpers import *
 router = APIRouter(prefix="/repairs", tags=["Repairs"])
 
 @router.post("/", status_code=201, response_model=RepairResponse)
-async def create_new_repair(new_repair: RepairCreate, db: AsyncSession = Depends(get_db)):
+async def create_new_repair(new_repair: RepairCreate, db: AsyncSession = Depends(get_async_db)):
     # проверка, активен ли инструмент
     tool_stmt = select_response(Tool).where(Tool.id == new_repair.tool_id)
     tool: Tool | None = (await db.scalars(tool_stmt)).one_or_none()
@@ -50,13 +50,13 @@ async def create_new_repair(new_repair: RepairCreate, db: AsyncSession = Depends
     return repair
 
 @router.get("/", response_model=list[RepairResponse])
-async def get_all_repairs(db: AsyncSession = Depends(get_db)):
+async def get_all_repairs(db: AsyncSession = Depends(get_async_db)):
     stmt = select(Repair)
     list_repairs = (await db.scalars(stmt)).all()
     return list_repairs
 
 @router.get("/{repair_id}", response_model=RepairResponse)
-async def get_repair_by_id(repair_id: int, db: AsyncSession = Depends(get_db)):
+async def get_repair_by_id(repair_id: int, db: AsyncSession = Depends(get_async_db)):
     stmt = select(Repair).where(Repair.id == repair_id)
     repair: Repair | None = (await db.scalars(stmt)).one_or_none()
     if repair is None:

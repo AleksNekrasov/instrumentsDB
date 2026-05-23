@@ -5,7 +5,7 @@ from sqlalchemy import select
 
 from datetime import datetime, UTC
 
-from app.database_depends import get_db
+from app.database_depends import get_async_db
 
 from app.table_models.table_tool_movement import ToolMovement
 from app.schemas_pydantic.tool_movement_pydantic import (ToolMovementCreate,
@@ -22,7 +22,7 @@ from app.helpers import (select_response,
 router = APIRouter(prefix='/tool-movements', tags=["ToolMovements"])
 
 @router.post("/", status_code=201, response_model=ToolMovementResponse)
-async def create_new_tool_movement(new_tool_movement: ToolMovementCreate, db: AsyncSession = Depends(get_db)):
+async def create_new_tool_movement(new_tool_movement: ToolMovementCreate, db: AsyncSession = Depends(get_async_db)):
 
     # Проверяем, существует ли перемещаемый инструмент,
     tool_stmt = select_response(Tool).where(Tool.id == new_tool_movement.tool_id)
@@ -65,12 +65,12 @@ async def create_new_tool_movement(new_tool_movement: ToolMovementCreate, db: As
     return tool_movement
 
 @router.get("/", response_model=list[ToolMovementResponse])
-async def get_all_tool_movements(db: AsyncSession = Depends(get_db)):
+async def get_all_tool_movements(db: AsyncSession = Depends(get_async_db)):
     tool_movements = (await db.scalars(select(ToolMovement))).all()
     return tool_movements
 
 @router.get("/tool_movement_id", response_model=ToolMovementResponse)
-async def get_tool_movement_by_id(tool_movement_id: int, db: AsyncSession = Depends(get_db)):
+async def get_tool_movement_by_id(tool_movement_id: int, db: AsyncSession = Depends(get_async_db)):
     stmt = select(ToolMovement).where(ToolMovement.id == tool_movement_id)
     tool_movement: ToolMovement | None = (await db.scalars(stmt)).one_or_none()
     if tool_movement is None:
