@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload, with_loader_criteria
 
 from app.table_models.table_tool_model import ToolModel
 from app.table_models.table_location import Location
-from app.table_models.table_employee import Employee
+from app.table_models.table_user import User
 
 from app.enum_file import StatusEnum
 
@@ -24,11 +24,15 @@ from app.helpers import (correct_name,
                          get_by_id,
                          soft_delete_model)
 
+from app.core.security import get_current_manager, get_current_storekeeper, get_current_admin
+
 router = APIRouter(prefix="/tools", tags=["Tools"])
 
 
 @router.post("/", status_code=201, response_model=ToolResponse)
-async def create_tool(new_tool: ToolCreate, db: AsyncSession = Depends(get_async_db)):
+async def create_tool(new_tool: ToolCreate,
+                      manager: User = Depends(get_current_manager), # проверка, что только менеджер или админ могут создавать инструмент
+                      db: AsyncSession = Depends(get_async_db)):
     # сначала приводим строки к корректному виду:
     new_tool = correct_name(pydantic_model=new_tool)
 
@@ -43,18 +47,6 @@ async def create_tool(new_tool: ToolCreate, db: AsyncSession = Depends(get_async
     if db_location is None:
         raise HTTPException(status_code=404, detail="Нет такой локации, создайте сначала локацию")
 
-    # проверим сотрудника, если передали его ID:
-    # if new_tool.employee_id is not None:
-    #     db_employee = await get_by_id(model_class=Employee, obj_id=new_tool.employee_id, db=db)
-    #     if db_employee is None:
-    #         raise HTTPException(status_code=404, detail="Нет такого сотрудника, сначала создайте сотрудника")
-
-    # создаем инструмент
-    # tool = Tool(**new_tool.model_dump(exclude_unset=True))
-    # db.add(tool)
-    # await db.commit()
-    # await db.refresh(tool)
-    # return tool
     tool = await create_model(model_class=Tool, pydantic_schema=new_tool, db=db)
     stmt = select_response(Tool).where(Tool.id == tool.id).options(selectinload(Tool.tool_model))
 
@@ -89,7 +81,10 @@ async def get_tool_by_id(tool_id: int, db: AsyncSession = Depends(get_async_db))
 
 
 @router.patch("/{tool_id}", response_model=ToolResponse)
-async def patch_tool(tool_id: int, new_patch: ToolUpdate, db: AsyncSession = Depends(get_async_db)):
+async def patch_tool(tool_id: int,
+                     new_patch: ToolUpdate,
+                     manager: User = Depends(get_current_manager), # только менеджер может обновить
+                     db: AsyncSession = Depends(get_async_db)):
     tool = await get_by_id(Tool, tool_id, db=db)
 
     if tool is None:
@@ -121,13 +116,10 @@ async def patch_tool(tool_id: int, new_patch: ToolUpdate, db: AsyncSession = Dep
     return updated_tool
 
 @router.delete("/{tool_id}")
-async def del_tool(tool_id: int, db: AsyncSession = Depends(get_async_db)):
-    """пока не знаю как правильно удалять инструмент.
-    В какой локации он должен находиться для списания и можно ли списывать когда инструмент у сотрудника,
-    или сначала переместить его на склад, забрать у сотрудника, потом списать"""
+async def del_tool(tool_id: int,
+                   manager: User = Depends(get_current_manager), # проверка на кладовщика
+                   db: AsyncSession = Depends(get_async_db)):
 
-
-    """Переделать полностью. через options подгружаем локацию, проверяем на is_active и чтобы name == склад"""
     stmt = (select(Tool)
             .where(Tool.id == tool_id, Tool.is_active.is_(True))
             .options(selectinload(Tool.location),selectinload(Tool.tool_model))

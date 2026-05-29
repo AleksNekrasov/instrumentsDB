@@ -4,7 +4,10 @@ from sqlalchemy import select
 
 from app.database_depends import get_async_db
 from app.table_models.table_employee import Employee
+from app.table_models.table_user import User
 from app.schemas_pydantic.employee_pydantic import EmployeeCreate, EmployeeResponse, EmployeeUpdate, EmployeeDelete
+
+from app.core.security import get_current_admin, get_current_manager, get_current_operator
 
 from app.helpers import (populate_employee_tools,
                          select_true_employee,
@@ -16,7 +19,9 @@ router = APIRouter(prefix='/employees', tags=["Employees"])
 
 
 @router.post("/", status_code=201, response_model=EmployeeResponse)
-async def create_employee(employee_in: EmployeeCreate, db: AsyncSession = Depends(get_async_db)):
+async def create_employee(employee_in: EmployeeCreate,
+                          operator: User = Depends(get_current_operator),
+                          db: AsyncSession = Depends(get_async_db)):
     """Создание нового сотрудника"""
     # 🔍 ищем сотрудника
     stmt = select(Employee).where(
@@ -40,13 +45,13 @@ async def create_employee(employee_in: EmployeeCreate, db: AsyncSession = Depend
         return existing_employee
 
     # ✅ создаём нового
-    employee = await create_model(model_class=Employee, pydantic_schema=employee_in, db=db)
+    new_employee = await create_model(model_class=Employee, pydantic_schema=employee_in, db=db)
     # employee = Employee(**employee_in.model_dump())
     # db.add(employee)
     # await db.commit()
     # await db.refresh(employee)
 
-    return employee
+    return new_employee
 
 
 @router.get("/", status_code=200, response_model=list[EmployeeResponse])
@@ -83,6 +88,7 @@ async def get_employee_by_id(
 @router.patch("/{employee_id}", response_model=EmployeeResponse)
 async def put_employee_by_id(employee_id: int,
                              new_data: EmployeeUpdate,
+                             operator: User = Depends(get_current_operator),
                              db: AsyncSession = Depends(get_async_db)):
     """ сырая функция обновления сотрудника (Нужно доработать)"""
     emp_stmt = select_true_employee().where(Employee.id == employee_id)
@@ -105,7 +111,9 @@ async def put_employee_by_id(employee_id: int,
 
 
 @router.delete("/{employee_id}", response_model=EmployeeDelete, status_code=200)
-async def del_employee_by_id(employee_id: int, db: AsyncSession = Depends(get_async_db)):
+async def del_employee_by_id(employee_id: int,
+                             operator: User = Depends(get_current_operator),
+                             db: AsyncSession = Depends(get_async_db)):
     stmt = select_true_employee().where(Employee.id == employee_id)
     employee = (await db.scalars(stmt)).unique().one_or_none()
 

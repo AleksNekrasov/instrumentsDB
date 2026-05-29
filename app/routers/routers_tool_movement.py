@@ -14,15 +14,19 @@ from app.schemas_pydantic.tool_movement_pydantic import (ToolMovementCreate,
 from app.table_models.table_tool import Tool
 from app.table_models.table_employee import Employee
 from app.table_models.table_location import Location
+from app.table_models.table_user import User
 
 from app.helpers import (select_response,
                          )
+from app.core.security import get_current_admin, get_current_storekeeper
 
 
 router = APIRouter(prefix='/tool-movements', tags=["ToolMovements"])
 
 @router.post("/", status_code=201, response_model=ToolMovementResponse)
-async def create_new_tool_movement(new_tool_movement: ToolMovementCreate, db: AsyncSession = Depends(get_async_db)):
+async def create_new_tool_movement(new_tool_movement: ToolMovementCreate,
+                                   storekeeper: User = Depends(get_current_storekeeper),
+                                   db: AsyncSession = Depends(get_async_db)):
 
     # Проверяем, существует ли перемещаемый инструмент,
     tool_stmt = select_response(Tool).where(Tool.id == new_tool_movement.tool_id)

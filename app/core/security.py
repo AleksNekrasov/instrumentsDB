@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.enum_file import UserRole
-from app.table_models.table_user_model import UserModel
+from app.table_models.table_user import User
 from app.config import get_settings
 from app.database_depends import get_async_db
 
@@ -59,6 +59,7 @@ def create_refresh_token(data: dict):
     )
     return jwt.encode(payload=to_encode, key=settings.secret_key, algorithm=settings.algorithm)
 
+# user
 async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_async_db)):
     """
     Проверяет JWT и возвращает пользователя из базы.
@@ -70,6 +71,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
     )
 
     settings = get_settings()
+    # расшифровка
     try:
         payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
         email: str | None = payload.get("sub")
@@ -87,19 +89,45 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
     except jwt.PyJWTError:
         raise credentials_exception
 
-    stmt = select(UserModel).where(UserModel.email == email, UserModel.is_active.is_(True))
+    stmt = select(User).where(User.email == email, User.is_active.is_(True))
     user = (await db.scalars(stmt)).one_or_none()
     if user is None:
         raise credentials_exception
 
     return user
 
-async def get_current_admin(current_user: UserModel = Depends(get_current_user)):
-    if current_user.role.value != UserRole.ADMIN.value:
+# admin
+async def get_current_admin(current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.ADMIN:
         raise HTTPException(
             status_code=403,
             detail="Access denied"
         )
     return current_user
 
+#manager
+async def get_current_manager(current_user: User = Depends(get_current_user)):
+    if current_user.role not in (UserRole.ADMIN, UserRole.MANAGER):
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied"
+        )
+    return current_user
 
+# storekeeper
+async def get_current_storekeeper(current_user: User = Depends(get_current_user)):
+    if current_user.role not in (UserRole.STOREKEEPER, UserRole.ADMIN):
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied"
+        )
+    return current_user
+
+#operator
+async def get_current_operator(current_user: User = Depends(get_current_user)):
+    if current_user.role not in (UserRole.OPERATOR, UserRole.ADMIN):
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied"
+        )
+    return current_user

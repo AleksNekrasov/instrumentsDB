@@ -10,9 +10,9 @@ class ToolBase(BaseModel):
     model_id: Annotated[int, Field(..., description="id модели инструмента")]
     serial_number: Annotated[str | None, Field(None, min_length=3, max_length=25,
                                                description="Серийный номер")] = None
-    purchase_date: Annotated[date | None, Field(None, description="Дата покупки")] = None
     status: Annotated[StatusEnum, Field(..., description="статус инструмента")] = StatusEnum.ACTIVE
-    location_id: Annotated[int, Field(..., description="id локации инструмента")]
+    #purchase_date: Annotated[date | None, Field(None, description="Дата покупки")] = None
+    #location_id: Annotated[int, Field(..., description="id локации инструмента")]
     #employee_id: Annotated[int | None, Field(None, description="id сотрудника")] = None
 
 class ToolCreate(ToolBase):

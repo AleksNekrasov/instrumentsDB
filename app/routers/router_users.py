@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import get_settings
 from app.database_depends import get_async_db
 from app.schemas_pydantic.token_pydantic import RefreshTokenRequest, AccessTokenRequest
-from app.table_models.table_user_model import UserModel
+from app.table_models.table_user import User
 from app.schemas_pydantic.user_pydantic import UserCreate, UserResponse
 from app.core.security import (hash_password,
                                verify_password,
@@ -24,9 +24,9 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSessi
     """
     Аутентифицирует пользователя и возвращает JWT с email, role и id.
     """
-    stmt = select(UserModel).where(UserModel.email == form_data.username,
-                                   UserModel.is_active.is_(True))
-    user: UserModel | None = (await db.scalars(stmt)).one_or_none()
+    stmt = select(User).where(User.email == form_data.username,
+                              User.is_active.is_(True))
+    user: User | None = (await db.scalars(stmt)).one_or_none()
 
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
@@ -43,10 +43,10 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSessi
 @router.post("/admin/createuser", status_code=201, response_model=UserResponse)
 async def register_user(user: UserCreate,
                         db: AsyncSession = Depends(get_async_db),
-                        current_admin: UserModel = Depends(get_current_admin)):
+                        current_admin: User = Depends(get_current_admin)):
     """регистрация нового пользователя"""
     # проверка email
-    stmt = select(UserModel).where(UserModel.email == user.email)
+    stmt = select(User).where(User.email == user.email)
     result = (await db.scalars(stmt)).one_or_none()
     if result:
         raise HTTPException(
@@ -54,10 +54,10 @@ async def register_user(user: UserCreate,
             detail="Email already registered"
         )
     # создание нового пользователя
-    new_user = UserModel(username=user.username,
-                         email=user.email,
-                         hashed_password=hash_password(user.password),
-                         role=user.role)
+    new_user = User(username=user.username,
+                    email=user.email,
+                    hashed_password=hash_password(user.password),
+                    role=user.role)
 
     # сохранение пользователя
     try:
@@ -68,8 +68,10 @@ async def register_user(user: UserCreate,
         await db.rollback()
         raise HTTPException(status_code=409, detail="Email already registered")
 
+    return new_user
+
 @router.get("/me", response_model=UserResponse)
-async def me(current_user: UserModel = Depends(get_current_user)):
+async def me(current_user: User = Depends(get_current_user)):
     """Эндпоинт проверки токена"""
     return current_user
 
@@ -103,8 +105,8 @@ async def refresh_token(body: RefreshTokenRequest,
         raise credentials_exception
 
     # проверяем что пользователь есть и он активный
-    stmt = select(UserModel).where(UserModel.email == email, UserModel.is_active.is_(True))
-    user: UserModel | None = (await db.scalars(stmt)).one_or_none()
+    stmt = select(User).where(User.email == email, User.is_active.is_(True))
+    user: User | None = (await db.scalars(stmt)).one_or_none()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found or inactive")
 
@@ -147,8 +149,8 @@ async def access_token(body: RefreshTokenRequest,
         raise credentials_exception
 
     # проверяем что пользователь есть и он активный
-    stmt = select(UserModel).where(UserModel.email == email, UserModel.is_active.is_(True))
-    user: UserModel | None = (await db.scalars(stmt)).one_or_none()
+    stmt = select(User).where(User.email == email, User.is_active.is_(True))
+    user: User | None = (await db.scalars(stmt)).one_or_none()
 
     if user is None:
         raise HTTPException(status_code=404, detail="User not found or inactive")

@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy import select
 
 from app.config import get_settings
-from app.table_models import UserModel
+from app.table_models import User
 from app.schemas_pydantic.user_pydantic import UserRole
 from app.core.security import hash_password  # ← адаптируй путь!
 
@@ -24,7 +24,7 @@ async def create_admin():
     try:
         async with async_session_maker() as db:
             # 3. Проверяем, существует ли админ
-            stmt = select(UserModel).where(UserModel.email == "admin@mail.com")
+            stmt = select(User).where(User.email == "admin@mail.com")
             result = (await db.scalars(stmt)).one_or_none()
 
             if result:
@@ -32,7 +32,7 @@ async def create_admin():
                 return
 
             # 4. Создаём админа
-            admin = UserModel(
+            admin = User(
                 username="admin",
                 email="admin@mail.com",
                 hashed_password=hash_password("admin123"),

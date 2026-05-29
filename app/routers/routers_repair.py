@@ -1,9 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
-from sqlalchemy import select
 
-from datetime import datetime, UTC
 
 from app.database_depends import get_async_db
 
@@ -12,22 +8,26 @@ from app.schemas_pydantic.repair_pydantic import (RepairCreate,
                                                   RepairResponse)
 
 from app.table_models.table_repair import Repair
-from app.table_models.table_tool import Tool
+from app.table_models.table_user import User
 
 from app.enum_file import StatusEnum
 from app.helpers import *
 
+from app.core.security import get_current_admin, get_current_storekeeper
+
 router = APIRouter(prefix="/repairs", tags=["Repairs"])
 
 @router.post("/", status_code=201, response_model=RepairResponse)
-async def create_new_repair(new_repair: RepairCreate, db: AsyncSession = Depends(get_async_db)):
+async def create_new_repair(new_repair: RepairCreate,
+                            storekeeper: User = Depends(get_current_storekeeper),
+                            db: AsyncSession = Depends(get_async_db)):
     # проверка, активен ли инструмент
     tool_stmt = select_response(Tool).where(Tool.id == new_repair.tool_id)
     tool: Tool | None = (await db.scalars(tool_stmt)).one_or_none()
     if tool is None:
         raise HTTPException(status_code=404, detail=f"Tool with id={new_repair.tool_id} not found or inactive")
 
-    # на всякий случай проверка статуса инструмента, если забыли списать
+    # на всякий случай проверка статуса инструмента, если списанный, но не удаленный
     if tool.status == StatusEnum.WRITTEN_OFF:
         raise HTTPException(status_code=400, detail="The instrument's status is 'decommissioned'. It cannot be repaired.")
 

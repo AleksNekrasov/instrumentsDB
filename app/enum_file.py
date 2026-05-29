@@ -9,4 +9,4 @@ class UserRole(str, PyEnum):
     ADMIN = "admin"
     MANAGER = "manager"
     STOREKEEPER = "storekeeper"
-    VIEWER = "viewer"
+    OPERATOR = "operator"

@@ -10,18 +10,22 @@ from app.database_depends import get_async_db
 from app.table_models.table_tool_issue import ToolIssue
 from app.table_models.table_tool import Tool
 from app.table_models.table_employee import Employee
+from app.table_models.table_user import User
 from app.schemas_pydantic.tool_issue_pydantic import (ToolIssueCreate,
                                                       ToolIssueResponse)
 from app.helpers import select_response
 
 from app.enum_file import StatusEnum
+from app.core.security import get_current_admin, get_current_storekeeper
 
 router = APIRouter(prefix='/tool-issues', tags=["ToolIssues"])
 
 
 @router.post('/', status_code=201, response_model=ToolIssueResponse)
-async def create_tool_issue(new_tool_issue: ToolIssueCreate, db: AsyncSession = Depends(get_async_db)):
-    # Проверка  tool_id существует ли инструмент
+async def create_tool_issue(new_tool_issue: ToolIssueCreate,
+                            storekeeper: User = Depends(get_current_storekeeper),
+                            db: AsyncSession = Depends(get_async_db)):
+    # Проверка tool_id существует ли инструмент
     tool_stmt = (select_response(Tool)
                  .where(Tool.id == new_tool_issue.tool_id)
                  .options(selectinload(Tool.location))
@@ -102,7 +106,9 @@ async def get_tool_issue_by_id(tool_issue_id: int, db: AsyncSession = Depends(ge
 
 
 @router.patch("/{tool_issue_id}", response_model=ToolIssueResponse)
-async def patch_tool_issue(tool_issue_id: int, db: AsyncSession = Depends(get_async_db)):
+async def patch_tool_issue(tool_issue_id: int,
+                           admin: User = Depends(get_current_admin),
+                           db: AsyncSession = Depends(get_async_db)):
     # загружаем изменяемую выдачу инструмента
     stmt_tool_issue = select(ToolIssue).where(ToolIssue.id == tool_issue_id).options(selectinload(ToolIssue.tool))
     tool_issue: ToolIssue | None = (await db.scalars(stmt_tool_issue)).one_or_none()

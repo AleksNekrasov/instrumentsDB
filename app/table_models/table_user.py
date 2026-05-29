@@ -11,7 +11,7 @@ from app.database_engine import Base
 
 from app.enum_file import UserRole
 
-class UserModel(Base):
+class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
