@@ -75,10 +75,18 @@ async def get_by_id(model_class: type[DeclarativeBase],
 
 def populate_employee_tools(employee: Employee) -> Employee:
     """Заполняет атрибут tools сотрудника списком моделей инструментов из активных выдач"""
+    # employee.tools = [
+    #     issue.tool.tool_model
+    #     for issue in employee.tool_issues
+    #     if issue.tool and issue.tool.tool_model
+    # ]
+
     employee.tools = [
         issue.tool.tool_model
         for issue in employee.tool_issues
-        if issue.tool and issue.tool.tool_model
+        if issue.return_date is None
+           and issue.tool
+           and issue.tool.tool_model
     ]
     return employee
 

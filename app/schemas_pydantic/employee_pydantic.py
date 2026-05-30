@@ -31,6 +31,7 @@ class EmployeeResponse(EmployeeBase):
 
     id: int
     tools: list[ToolModelResponse] = Field(default_factory=list)
+    is_active: bool
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -42,3 +43,19 @@ class EmployeeDelete(BaseModel):
     is_active: bool
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class EmployeeFilter(BaseModel):
+    search: str | None = None
+    position: str | None = None
+    is_active: bool | None = None
+    has_tools: bool | None = None
+
+    page: int = Field(1, ge=1)
+    page_size: int = Field(20, ge=1, le=100)
+
+class ListEmployeeResponse(BaseModel):
+    items: list[EmployeeResponse]
+    total: int
+    page: int
+    page_size: int
