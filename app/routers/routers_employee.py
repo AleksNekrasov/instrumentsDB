@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession, result
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, exists, func
 from sqlalchemy.orm import selectinload
 
@@ -16,7 +16,7 @@ from app.schemas_pydantic.employee_pydantic import (EmployeeCreate,
                                                     ListEmployeeResponse,
                                                     )
 
-from app.core.security import get_current_admin, get_current_manager, get_current_operator
+from app.core.security import get_current_operator
 
 from app.helpers import (populate_employee_tools,
                          select_true_employee,

@@ -26,14 +26,7 @@ class EmployeeUpdate(BaseModel):
                                           description="Должность (3-30 символов)")] = None
 
 
-class EmployeeResponse(EmployeeBase):
-    """Ответ API"""
 
-    id: int
-    tools: list[ToolModelResponse] = Field(default_factory=list)
-    is_active: bool
-
-    model_config = ConfigDict(from_attributes=True)
 
 
 class EmployeeDelete(BaseModel):
@@ -53,6 +46,17 @@ class EmployeeFilter(BaseModel):
 
     page: int = Field(1, ge=1)
     page_size: int = Field(20, ge=1, le=100)
+
+class EmployeeResponse(BaseModel):
+    """Ответ API"""
+
+    id: int
+    name: str
+    position: str
+    is_active: bool
+    tools: list[ToolModelResponse] = Field(default_factory=list)
+
+    model_config = ConfigDict(from_attributes=True)
 
 class ListEmployeeResponse(BaseModel):
     items: list[EmployeeResponse]

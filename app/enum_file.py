@@ -11,3 +11,6 @@ class UserRole(str, PyEnum):
     STOREKEEPER = "storekeeper"
     OPERATOR = "operator"
     VIEWER = "viewer"
+
+class LocationEnum(str, PyEnum):
+    pass

@@ -1,15 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
+from sqlalchemy import select, exists, func
 
 from app.database_depends import get_async_db
 from app.table_models.table_location import Location
 from app.table_models.table_user import User
+from app.table_models.table_tool import Tool
 from app.schemas_pydantic.location_pydantic import (LocationUpdate,
                                                     LocationResponse,
                                                     LocationCreate,
                                                     LocationDelete,
-                                                    LocationWithToolsResponse)
+                                                    LocationWithToolsResponse,
+                                                    LocationFilters, ListLocationResponse)
 from app.core.security import get_current_admin
 
 from app.helpers import (correct_name,
@@ -22,7 +24,7 @@ router = APIRouter(prefix='/locations', tags=["Locations"])
 
 @router.post("/", response_model=LocationResponse, status_code=201)
 async def post_new_location(new_location: LocationCreate,
-                            admin: User = Depends(get_current_admin),
+                            _: User = Depends(get_current_admin),
                             db: AsyncSession = Depends(get_async_db)):
     """ создание новой локации"""
     new_location = correct_name(pydantic_model=new_location) # приводим отправленные нам название локации в корректный вид
@@ -52,12 +54,50 @@ async def post_new_location(new_location: LocationCreate,
     return location
 
 
-@router.get("/", response_model=list[LocationResponse])
-async def get_all_locations(db: AsyncSession = Depends(get_async_db)):
+@router.get("/", response_model=ListLocationResponse)
+async def get_all_locations(filters: LocationFilters = Depends(),
+                            db: AsyncSession = Depends(get_async_db)):
     """возвращает список всех активных локаций"""
-    stmt = select_response(model=Location)
-    locations = (await db.scalars(stmt)).all()
-    return locations
+    filters_list = []
+
+    # поиск
+    if filters.search:
+        search_value = filters.search.strip()
+        if search_value:
+            filters_list.append(Location.name.ilike(f"%{search_value}%"))
+
+    # True/False локации
+    if filters.is_active is not None:
+        filters_list.append(Location.is_active.is_(filters.is_active))
+
+    # True/False локации с наличием/без наличия инструмента
+    if filters.has_tools is not None:
+        tool_exists = exists().where(Tool.location_id == Location.id, Tool.is_active.is_(True))
+        filters_list.append(tool_exists if filters.has_tools else ~tool_exists)
+
+    # total подсчет
+    total_stmt = select(func.count()).select_from(Location).where(*filters_list)
+    total = await db.scalar(total_stmt) or 0
+
+    stmt = (select(Location)
+            .where(*filters_list)
+            .order_by(Location.id)
+            .offset((filters.page - 1) * filters.page_size)
+            .limit(filters.page_size)
+            )
+    items = (await db.scalars(stmt)).all()
+
+    return {
+        "items": items,
+        "total": total,
+        "page": filters.page,
+        "page_size": filters.page_size
+    }
+
+
+
+
+
 
 @router.get("/{location_id}", response_model=LocationWithToolsResponse)
 async def location_with_tools(location_id: int,
