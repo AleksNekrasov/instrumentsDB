@@ -18,9 +18,33 @@ class RepairUpdate(BaseModel):
     description: Annotated[str | None, Field(None, max_length=200, description="Описание ремонта")] = None
     cost: Annotated[Decimal | None, Field(None, description="Цена ремонта")] = None
 
-class RepairResponse(RepairBase):
-    """Ответ API"""
+class RepairFilter(BaseModel):
+    search: str | None = None
+    tool_id: int | None = None
+    date_from: datetime | None = None
+    date_to: datetime | None = None
+    min_cost: Decimal | None = Field(None, ge=0)
+    max_cost: Decimal | None = Field(None, ge=0)
+    has_cost: bool | None = None
 
+    page: int = Field(1, ge=1)
+    page_size: int = Field(20, ge=1, le=100)
+
+
+class RepairResponse(BaseModel):
+    """Ответ API"""
     id: int
+    tool_id: int
+    repair_date: datetime | None
+    description: str
+    cost: Decimal | None
+
     model_config = ConfigDict(from_attributes=True)
+
+class ListRepairResponse(BaseModel):
+    items: list[RepairResponse]
+    total: int
+    page: int
+    page_size: int
+
 

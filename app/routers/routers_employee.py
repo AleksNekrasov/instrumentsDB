@@ -41,20 +41,20 @@ async def create_employee(employee_in: EmployeeCreate,
     result = await db.execute(stmt)
     existing_employee = result.scalar_one_or_none()
 
-    # ❌ если уже есть активный
+    #  если уже есть активный
     if existing_employee and existing_employee.is_active:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="сотрудник уже существует и он работает"
                             )
 
-    # ♻️ если есть, но неактивный — восстанавливаем
+    #  если есть, но неактивный — восстанавливаем
     if existing_employee and existing_employee.is_active == False:
         existing_employee.is_active = True
         await db.commit()
         await db.refresh(existing_employee)
         return existing_employee
 
-    # ✅ создаём нового
+    #  создаём нового
     new_employee = await create_model(model_class=Employee, pydantic_schema=employee_in, db=db)
     # employee = Employee(**employee_in.model_dump())
     # db.add(employee)
