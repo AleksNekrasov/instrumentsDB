@@ -21,7 +21,7 @@ router = APIRouter(prefix="/repairs", tags=["Repairs"])
 
 @router.post("/", status_code=201, response_model=RepairResponse)
 async def create_new_repair(new_repair: RepairCreate,
-                            storekeeper: User = Depends(get_current_storekeeper),
+                            _: User = Depends(get_current_storekeeper),
                             db: AsyncSession = Depends(get_async_db)):
     # проверка, активен ли инструмент
     tool_stmt = select_response(Tool).where(Tool.id == new_repair.tool_id)
@@ -103,7 +103,7 @@ async def get_all_repairs(filters: RepairFilter = Depends(),
             else Repair.cost.is_(None)
         )
 
-    # tolal подсчет
+    # total подсчет
     total_stmt = select(func.count()).select_from(Repair).where(*filters_list)
     total = await db.scalar(total_stmt) or 0
 

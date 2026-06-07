@@ -114,7 +114,7 @@ async def location_with_tools(location_id: int,
 @router.patch("/{location_id}", response_model=LocationResponse)
 async  def put_location_by_id(location_id: int,
                               location_update: LocationUpdate,
-                              admin: User = Depends(get_current_admin),
+                              _: User = Depends(get_current_admin),
                               db: AsyncSession = Depends(get_async_db)):
     # ищем локацию
     stmt = select_response(model=Location).where(Location.id == location_id)
@@ -132,7 +132,7 @@ async  def put_location_by_id(location_id: int,
 
 @router.delete("/{location_id}", response_model=LocationDelete)
 async def del_location_by_id(location_id: int,
-                             admin: User = Depends(get_current_admin),
+                             _: User = Depends(get_current_admin),
                              db: AsyncSession = Depends(get_async_db)):
     # ищем локацию
     stmt = select_location_with_list_tools(location_id=location_id)
